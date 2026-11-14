@@ -1,0 +1,900 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="sys_hub_flow">
+    <sys_hub_flow action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <acls/>
+        <active>false</active>
+        <allow_high_security_roles>false</allow_high_security_roles>
+        <annotation/>
+        <attributes>labelCacheCleanUpExecuted=true</attributes>
+        <authored_on_release_version>29000</authored_on_release_version>
+        <callable_by_client_api>false</callable_by_client_api>
+        <category/>
+        <compiler_build/>
+        <copied_from/>
+        <copied_from_name/>
+        <description>Handles CAB booking cancellation and rescheduling notifications.</description>
+        <display_name_after_preview/>
+        <flow_priority>MEDIUM</flow_priority>
+        <generation_source/>
+        <internal_name>cab_booking_lifecycle_notifications</internal_name>
+        <label_cache>[{"name":"Updated_1.current.end_date_time","label":"Trigger - Record Updated➛CAB Booking Record➛End Date/Time","reference":"","reference_display":"End Date/Time","type":"glide_date_time","base_type":"glide_date_time","parent_table_name":"x_1459713_cab_bo_0_cab_booking","column_name":"end_date_time","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{},"attributes":null},{"name":"Updated_1.current.start_date_time","label":"Trigger - Record Updated➛CAB Booking Record➛Start Date/Time","reference":"","reference_display":"Start Date/Time","type":"glide_date_time","base_type":"glide_date_time","parent_table_name":"x_1459713_cab_bo_0_cab_booking","column_name":"start_date_time","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{},"attributes":null},{"name":"Updated_1.current.proposed_start_date_time","label":"Trigger - Record Updated➛CAB Booking Record➛Proposed Start Date/Time","reference":"","reference_display":"Proposed Start Date/Time","type":"glide_date_time","base_type":"glide_date_time","parent_table_name":"x_1459713_cab_bo_0_cab_booking","column_name":"proposed_start_date_time","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"0f48dc32-6626-487a-b17e-0a8c2aa3205e":["proposed_start_date_time","start_date_time"]},"attributes":null},{"name":"f93ea1a2-8508-4363-a828-58a9e4906916.item.field_name","label":"1➛FDChangeDetails➛Field Name","reference":"","reference_display":"","type":"string","base_type":"string","parent_table_name":null,"column_name":"","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"56ce5f51-9519-4991-a357-dac7b865b35a":["condition"]},"attributes":{"":""}},{"name":"Updated_1.current","label":"Trigger - Record Updated➛CAB Booking Record","reference":"x_1459713_cab_bo_0_cab_booking","reference_display":"CAB Booking","type":"reference","base_type":"reference","parent_table_name":null,"column_name":null,"choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"0cb3d326-05bb-4bac-9b27-71e9e91017aa":["record"],"53d33f30-e4ca-467c-94dc-e214e8289d58":["record"],"08a89ae0-4a0a-41d3-bc74-b0e0f5e71df6":["record"],"82082884-f405-46e4-ad33-49d514b7793b":["record"],"0f48dc32-6626-487a-b17e-0a8c2aa3205e":["record"]},"attributes":{"":""}},{"name":"Updated_1.changed_fields","label":"Trigger - Record Updated➛Changed Fields","reference":null,"reference_display":null,"type":"array.object","base_type":"array.object","parent_table_name":null,"column_name":null,"choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"f93ea1a2-8508-4363-a828-58a9e4906916":["items"]},"attributes":{"uiTypeLabel":"Array.Object","co_type_name":"FDCollection","child_label":"FDChangeDetails","child_type_label":"Object","element_mapping_provider":"com.glide.flow_design.action.data.FlowDesignVariableMapper","pwd2droppable":"true","uiType":"array.object","child_type":"object","child_name":"FDChangeDetails"}},{"name":"{{static.c0417129c3e893107faa33bc05013145}}","label":"CAB Coordinators","reference":"sys_user_group","reference_display":null,"type":"reference","base_type":"reference","parent_table_name":null,"column_name":null,"choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"0cb3d326-05bb-4bac-9b27-71e9e91017aa":["approval_conditions"]},"attributes":null},{"name":"Updated_1.current.requested_by.email","label":"Trigger - Record Updated➛CAB Booking Record➛Requested By➛Email","reference":"","reference_display":"Email","type":"email","base_type":"email","parent_table_name":"sys_user","column_name":"email","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"53d33f30-e4ca-467c-94dc-e214e8289d58":["ah_to"],"08a89ae0-4a0a-41d3-bc74-b0e0f5e71df6":["ah_to"]},"attributes":null},{"name":"Updated_1.current.proposed_end_date_time","label":"Trigger - Record Updated➛CAB Booking Record➛Proposed End Date/Time","reference":"","reference_display":"Proposed End Date/Time","type":"glide_date_time","base_type":"glide_date_time","parent_table_name":"x_1459713_cab_bo_0_cab_booking","column_name":"proposed_end_date_time","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"0f48dc32-6626-487a-b17e-0a8c2aa3205e":["end_date_time","proposed_end_date_time"]},"attributes":null},{"name":"Updated_1.current.requested_by","label":"Trigger - Record Updated➛CAB Booking Record➛Requested By","reference":"sys_user","reference_display":"Requested By","type":"reference","base_type":"reference","parent_table_name":"x_1459713_cab_bo_0_cab_booking","column_name":"requested_by","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{},"attributes":null},{"name":"Updated_1.current.status","label":"Trigger - Record Updated➛CAB Booking Record➛Status","reference":"","reference_display":"Status","type":"choice","base_type":"choice","parent_table_name":"x_1459713_cab_bo_0_cab_booking","column_name":"status","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"56ce5f51-9519-4991-a357-dac7b865b35a":["condition"]},"attributes":null},{"name":"Updated_1.current.number","label":"Trigger - Record Updated➛CAB Booking Record➛Number","reference":"","reference_display":"Number","type":"string","base_type":"string","parent_table_name":"x_1459713_cab_bo_0_cab_booking","column_name":"number","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"53d33f30-e4ca-467c-94dc-e214e8289d58":["ah_subject"],"08a89ae0-4a0a-41d3-bc74-b0e0f5e71df6":["ah_subject"]},"attributes":null},{"name":"f93ea1a2-8508-4363-a828-58a9e4906916.item.current_value","label":"1➛FDChangeDetails➛Current Value","reference":"","reference_display":"","type":"string","base_type":"string","parent_table_name":null,"column_name":"","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"7f90470d-c792-461b-bc1a-e4d7905a2a14":["condition"],"d802b6d8-2a74-4179-af62-4ad2b1b20335":["condition"]},"attributes":{"":""}},{"name":"Updated_1.current.change_request","label":"Trigger - Record Updated➛CAB Booking Record➛Change Request","reference":"change_request","reference_display":"Change Request","type":"reference","base_type":"reference","parent_table_name":"x_1459713_cab_bo_0_cab_booking","column_name":"change_request","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{},"attributes":null},{"name":"0cb3d326-05bb-4bac-9b27-71e9e91017aa.approval_state","label":"6➛Approval State","reference":null,"reference_display":"Approval State","type":"choice","base_type":"choice","parent_table_name":null,"column_name":null,"choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{},"attributes":{"element_mapping_provider":"com.glide.flow_design.action.data.FlowDesignVariableMapper"}},{"name":"Updated_1.current.agenda","label":"Trigger - Record Updated➛CAB Booking Record➛Agenda","reference":"","reference_display":"Agenda","type":"string","base_type":"string","parent_table_name":"x_1459713_cab_bo_0_cab_booking","column_name":"agenda","choices":[{"label":null,"value":null,"order":0.0}],"usedInstances":{"08a89ae0-4a0a-41d3-bc74-b0e0f5e71df6":[null]},"attributes":null}]</label_cache>
+        <latest_snapshot/>
+        <master_snapshot/>
+        <master_snapshot_digest/>
+        <name>CAB Booking Lifecycle Notifications</name>
+        <natlang/>
+        <outputs/>
+        <pre_compiled>false</pre_compiled>
+        <remote_trigger_id/>
+        <run_as>user</run_as>
+        <run_with_roles/>
+        <sc_callable>false</sc_callable>
+        <show_draft_actions>false</show_draft_actions>
+        <show_triggered_flows>false</show_triggered_flows>
+        <status>draft</status>
+        <substatus/>
+        <sys_class_name>sys_hub_flow</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 09:47:39</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>0f35622dc320d3107faa33bc0501318e</sys_id>
+        <sys_mod_count>42</sys_mod_count>
+        <sys_name>CAB Booking Lifecycle Notifications</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="CAB Booking Automation" source="x_1459713_cab_bo_0">c317a565c3a893107faa33bc05013129</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_update_name>sys_hub_flow_0f35622dc320d3107faa33bc0501318e</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:07:49</sys_updated_on>
+        <type>flow</type>
+        <updation_source/>
+        <version>2</version>
+        <version_record>c4c0e361c328d3107faa33bc0501316e</version_record>
+    </sys_hub_flow>
+    <sys_translated_text action="delete_multiple" query="documentkey=0f35622dc320d3107faa33bc0501318e"/>
+    <sys_variable_value action="delete_multiple" query="document_key=0f35622dc320d3107faa33bc0501318e"/>
+    <sys_hub_flow_stage action="delete_multiple" query="flow=0f35622dc320d3107faa33bc0501318e"/>
+    <sys_flow_cat_variable_model action="delete_multiple" query="id=0f35622dc320d3107faa33bc0501318e^sys_idNOT IN0f352669c360d3107faa33bc050131c2"/>
+    <sys_flow_cat_variable_model action="INSERT_OR_UPDATE">
+        <id>0f35622dc320d3107faa33bc0501318e</id>
+        <name>CAB Booking Lifecycle Notifications</name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 09:47:39</sys_created_on>
+        <sys_id>0f352669c360d3107faa33bc050131c2</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope/>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 09:47:39</sys_updated_on>
+    </sys_flow_cat_variable_model>
+    <sys_flow_cat_variable action="delete_multiple" query="flow_catalog_model=0f352669c360d3107faa33bc050131c2"/>
+    <sys_hub_flow_input action="delete_multiple" query="model=0f35622dc320d3107faa33bc0501318e^sys_idNOT IN2aa562a9c360d3107faa33bc05013115,32a562a9c360d3107faa33bc0501315b,b6a562a9c360d3107faa33bc05013166"/>
+    <sys_hub_flow_input action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <array>false</array>
+        <array_denormalized>false</array_denormalized>
+        <attributes>element_mapping_provider=com.glide.flow_design.action.data.FlowDesignVariableMapper,test_input_hidden=true,uiType=table_name</attributes>
+        <audit>false</audit>
+        <calculation><![CDATA[(function calculatedFieldValue(current) {
+
+	// Add your code here
+	return '';  // return the calculated value
+
+})(current);]]></calculation>
+        <choice/>
+        <choice_field/>
+        <choice_table/>
+        <column_label/>
+        <comments/>
+        <create_roles/>
+        <default_value/>
+        <defaultsort/>
+        <delete_roles/>
+        <dependent/>
+        <dependent_on_field/>
+        <display>false</display>
+        <dynamic_creation>false</dynamic_creation>
+        <dynamic_creation_script/>
+        <dynamic_default_value/>
+        <dynamic_ref_qual/>
+        <element>table_name</element>
+        <element_reference>false</element_reference>
+        <foreign_database/>
+        <formula/>
+        <function_definition/>
+        <function_field>false</function_field>
+        <help/>
+        <hint/>
+        <internal_type display_value="">table_name</internal_type>
+        <label>Table Name</label>
+        <mandatory>false</mandatory>
+        <max_length>200</max_length>
+        <model display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</model>
+        <model_id>0f35622dc320d3107faa33bc0501318e</model_id>
+        <model_table>sys_hub_flow</model_table>
+        <name>var__m_sys_hub_flow_input_0f35622dc320d3107faa33bc0501318e</name>
+        <next_element/>
+        <order>101</order>
+        <primary>false</primary>
+        <read_only>false</read_only>
+        <read_only_option/>
+        <read_roles/>
+        <reference/>
+        <reference_cascade_rule/>
+        <reference_floats>false</reference_floats>
+        <reference_key/>
+        <reference_qual/>
+        <reference_qual_condition/>
+        <reference_type/>
+        <sizeclass/>
+        <spell_check>false</spell_check>
+        <staged>false</staged>
+        <sys_class_name>sys_hub_flow_input</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 09:49:32</sys_created_on>
+        <sys_id>2aa562a9c360d3107faa33bc05013115</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name/>
+        <sys_package/>
+        <sys_policy/>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_update_name/>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 09:49:32</sys_updated_on>
+        <table_reference>false</table_reference>
+        <text_index>false</text_index>
+        <unique>false</unique>
+        <use_dependent_field>false</use_dependent_field>
+        <use_dynamic_default>false</use_dynamic_default>
+        <use_reference_qualifier>simple</use_reference_qualifier>
+        <virtual>false</virtual>
+        <virtual_type>script</virtual_type>
+        <widget/>
+        <write_roles/>
+        <xml_view>false</xml_view>
+    </sys_hub_flow_input>
+    <sys_hub_action_input_action_instance action="delete_multiple" query="action_input=2aa562a9c360d3107faa33bc05013115"/>
+    <sys_hub_flow_input action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <array>false</array>
+        <array_denormalized>false</array_denormalized>
+        <attributes>element_mapping_provider=com.glide.flow_design.action.data.FlowDesignVariableMapper,uiType=document_id</attributes>
+        <audit>false</audit>
+        <calculation><![CDATA[(function calculatedFieldValue(current) {
+
+	// Add your code here
+	return '';  // return the calculated value
+
+})(current);]]></calculation>
+        <choice/>
+        <choice_field/>
+        <choice_table/>
+        <column_label/>
+        <comments/>
+        <create_roles/>
+        <default_value/>
+        <defaultsort/>
+        <delete_roles/>
+        <dependent>table_name</dependent>
+        <dependent_on_field>table_name</dependent_on_field>
+        <display>false</display>
+        <dynamic_creation>false</dynamic_creation>
+        <dynamic_creation_script/>
+        <dynamic_default_value/>
+        <dynamic_ref_qual/>
+        <element>current</element>
+        <element_reference>false</element_reference>
+        <foreign_database/>
+        <formula/>
+        <function_definition/>
+        <function_field>false</function_field>
+        <help/>
+        <hint/>
+        <internal_type display_value="">document_id</internal_type>
+        <label>Record</label>
+        <mandatory>true</mandatory>
+        <max_length>200</max_length>
+        <model display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</model>
+        <model_id>0f35622dc320d3107faa33bc0501318e</model_id>
+        <model_table>sys_hub_flow</model_table>
+        <name>var__m_sys_hub_flow_input_0f35622dc320d3107faa33bc0501318e</name>
+        <next_element/>
+        <order>100</order>
+        <primary>false</primary>
+        <read_only>false</read_only>
+        <read_only_option/>
+        <read_roles/>
+        <reference/>
+        <reference_cascade_rule/>
+        <reference_floats>false</reference_floats>
+        <reference_key/>
+        <reference_qual/>
+        <reference_qual_condition/>
+        <reference_type/>
+        <sizeclass/>
+        <spell_check>false</spell_check>
+        <staged>false</staged>
+        <sys_class_name>sys_hub_flow_input</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 09:49:32</sys_created_on>
+        <sys_id>32a562a9c360d3107faa33bc0501315b</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name/>
+        <sys_package/>
+        <sys_policy/>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_update_name/>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 09:49:32</sys_updated_on>
+        <table_reference>false</table_reference>
+        <text_index>false</text_index>
+        <unique>false</unique>
+        <use_dependent_field>true</use_dependent_field>
+        <use_dynamic_default>false</use_dynamic_default>
+        <use_reference_qualifier>simple</use_reference_qualifier>
+        <virtual>false</virtual>
+        <virtual_type>script</virtual_type>
+        <widget/>
+        <write_roles/>
+        <xml_view>false</xml_view>
+    </sys_hub_flow_input>
+    <sys_hub_action_input_action_instance action="delete_multiple" query="action_input=32a562a9c360d3107faa33bc0501315b"/>
+    <sys_hub_flow_input action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <array>false</array>
+        <array_denormalized>false</array_denormalized>
+        <attributes>child_label=FDChangeDetails,child_name=FDChangeDetails,child_type=object,child_type_label=Object,co_type_name=FDCollection,element_mapping_provider=com.glide.flow_design.action.data.FlowDesignVariableMapper,pwd2droppable=true,uiType=array.object,uiTypeLabel=Array.Object</attributes>
+        <audit>false</audit>
+        <calculation><![CDATA[(function calculatedFieldValue(current) {
+
+	// Add your code here
+	return '';  // return the calculated value
+
+})(current);]]></calculation>
+        <choice/>
+        <choice_field/>
+        <choice_table/>
+        <column_label/>
+        <comments/>
+        <create_roles/>
+        <default_value/>
+        <defaultsort/>
+        <delete_roles/>
+        <dependent/>
+        <dependent_on_field/>
+        <display>false</display>
+        <dynamic_creation>false</dynamic_creation>
+        <dynamic_creation_script/>
+        <dynamic_default_value/>
+        <dynamic_ref_qual/>
+        <element>changed_fields</element>
+        <element_reference>false</element_reference>
+        <foreign_database/>
+        <formula/>
+        <function_definition/>
+        <function_field>false</function_field>
+        <help/>
+        <hint/>
+        <internal_type display_value="String">string</internal_type>
+        <label>Changed Fields</label>
+        <mandatory>false</mandatory>
+        <max_length>4000</max_length>
+        <model display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</model>
+        <model_id>0f35622dc320d3107faa33bc0501318e</model_id>
+        <model_table>sys_hub_flow</model_table>
+        <name>var__m_sys_hub_flow_input_0f35622dc320d3107faa33bc0501318e</name>
+        <next_element/>
+        <order>100</order>
+        <primary>false</primary>
+        <read_only>false</read_only>
+        <read_only_option/>
+        <read_roles/>
+        <reference/>
+        <reference_cascade_rule/>
+        <reference_floats>false</reference_floats>
+        <reference_key/>
+        <reference_qual/>
+        <reference_qual_condition/>
+        <reference_type/>
+        <sizeclass/>
+        <spell_check>false</spell_check>
+        <staged>false</staged>
+        <sys_class_name>sys_hub_flow_input</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 09:49:32</sys_created_on>
+        <sys_id>b6a562a9c360d3107faa33bc05013166</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name/>
+        <sys_package/>
+        <sys_policy/>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_update_name/>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 09:49:32</sys_updated_on>
+        <table_reference>false</table_reference>
+        <text_index>false</text_index>
+        <unique>false</unique>
+        <use_dependent_field>false</use_dependent_field>
+        <use_dynamic_default>false</use_dynamic_default>
+        <use_reference_qualifier>simple</use_reference_qualifier>
+        <virtual>false</virtual>
+        <virtual_type>script</virtual_type>
+        <widget/>
+        <write_roles/>
+        <xml_view>false</xml_view>
+    </sys_hub_flow_input>
+    <sys_hub_action_input_action_instance action="delete_multiple" query="action_input=b6a562a9c360d3107faa33bc05013166"/>
+    <sys_hub_flow_output action="delete_multiple" query="model=0f35622dc320d3107faa33bc0501318e"/>
+    <sys_hub_alias_mapping action="delete_multiple" query="source_id=0f35622dc320d3107faa33bc0501318e"/>
+    <sys_hub_trigger_instance_v2 action="delete_multiple" query="flow=0f35622dc320d3107faa33bc0501318e^sys_idNOT IN26a5a6edc320d3107faa33bc05013152"/>
+    <sys_hub_trigger_instance_v2 action="INSERT_OR_UPDATE">
+        <comment/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <generation_source/>
+        <name>Updated</name>
+        <published_version/>
+        <remote_sys_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 09:49:31</sys_created_on>
+        <sys_id>26a5a6edc320d3107faa33bc05013152</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_scope/>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 09:56:39</sys_updated_on>
+        <trigger_definition display_value="Updated">bb695e60c31322002841b63b12d3aea5</trigger_definition>
+        <trigger_inputs>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</trigger_inputs>
+        <trigger_outputs/>
+        <trigger_type>record_update</trigger_type>
+        <updation_source/>
+    </sys_hub_trigger_instance_v2>
+    <sys_hub_action_instance_v2 action="delete_multiple" query="flow=0f35622dc320d3107faa33bc0501318e^sys_idNOT IN1afe13adc3e4d3107faa33bc050131e6,2bfb9321c3e4d3107faa33bc05013195,7f2b6e25c3a0d3107faa33bc05013176,c70d5b2dc3a4d3107faa33bc0501314f,fbff5fedc3e4d3107faa33bc050131c1"/>
+    <sys_hub_action_instance_v2 action="INSERT_OR_UPDATE">
+        <action_type display_value="Update Record">f9d01dd2c31332002841b63b12d3aea1</action_type>
+        <action_type_parent/>
+        <attributes/>
+        <comment/>
+        <compiled_snapshot/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <generation_source/>
+        <order>10</order>
+        <parent_ui_id>2db05296-0715-4bb1-9f8f-e950f974583a</parent_ui_id>
+        <sys_class_name>sys_hub_action_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 13:59:55</sys_created_on>
+        <sys_id>1afe13adc3e4d3107faa33bc050131e6</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:01:05</sys_updated_on>
+        <ui_id>82082884-f405-46e4-ad33-49d514b7793b</ui_id>
+        <updation_source/>
+        <values>H4sIAAAAAAAA/+1T0U7bMBT9lcrPUZU0hUHfgKrSJAYSsL4Asxz7plhz7Mx2gK7qv+8mcdKuMAQSk4a0PsX33Gufc3rP9YpIQSZkDCJODpN9niZpOorj0cE4yfbTLBmJlAEkJCKaFYCdFrixAs/3TFV1YbX6WgrmQdBkyCtrQfv1GnEhXanYch7asMLvpBKIk8n1bURKZvFGD5ZMVjvQaykploHC1ouO0y5HvyzrszC8KpAXlV3xNExOAzL4PEUEh2o6SRwRePSgBSCRnCkHESmYRpXGLsnE2woLFpg412rZd9xJ7VuhBXt08ie+PI7rvhxQGQ8m9EcaDGrL+ZR5dok3c1/Z3i8jObjWEwE5q5Q/2a61Deell0a3I55lqps2qir0WesI6S/Y+j8qhySgrHXWzFtZ+eWdebjoSM6kbiwJEpXhTPUn5r2VWeVrOisCChqPC1aWUi9oac29bIaRSjFcKDwMc2Ue8E0nF3rIeM17iK6y4Qzr06Y8Z1bWIr7gNTi8johbuhPFnNtIQQ/pj6pm0goLEmjjQmMBbTahHuZWlv4In7qHQHwdhaWPRy9uGGwWqtl1t7X0zjNfuZsqjlPBjc6lLUB8Q8mlcZgEhK2ndSqolwW0fRsY6e6CTwPzN554WwJf4U+XwJkEJdwzhoUEeihQG9JpDfw9hFcBHMwD2Ofw3YKY7MfN738c/904ZnsvrRs/3GzX1p2bSD7SZLx3+ClJKWcZzQyNw4f5jvqf5uvk6Hhw3INvS8YrqHbJuGpW4HnqXTh2a6fbs4OzFgih2Hu3TBx8pDQEGR8+Dn8Kwe0vbpNIDooJAAA=</values>
+    </sys_hub_action_instance_v2>
+    <sys_hub_alias_mapping action="delete_multiple" query="source_id=1afe13adc3e4d3107faa33bc050131e6"/>
+    <sys_hub_action_instance_v2 action="INSERT_OR_UPDATE">
+        <action_type display_value="Ask For Approval">f8f2e9920b10030085c083eb37673abd</action_type>
+        <action_type_parent/>
+        <attributes/>
+        <comment/>
+        <compiled_snapshot/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <generation_source/>
+        <order>6</order>
+        <parent_ui_id>d802b6d8-2a74-4179-af62-4ad2b1b20335</parent_ui_id>
+        <sys_class_name>sys_hub_action_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 13:46:53</sys_created_on>
+        <sys_id>2bfb9321c3e4d3107faa33bc05013195</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 13:48:40</sys_updated_on>
+        <ui_id>0cb3d326-05bb-4bac-9b27-71e9e91017aa</ui_id>
+        <updation_source/>
+        <values>H4sIAAAAAAAA/+1YXXObOBT9Kx6eHVcYg3He0niy085uM+OkfclkGCFdYrUyUCTauB7/972AMKztuGbjzjY7efFY90Oce3WOkLhbWYJb5xaMPMfFn3HkEHtoEx8832cTQpnvee7IsfpWTBeAkTRNs+QblUEGVCUxOnCQF54ZfM1B6Z5OehkoNgeeS+hdXrztLQC0iB8wlguVSrr81CGFzYXkGcTW+d1930pphjg0ZNb5ast1bCGShiAx9MJU0pvVlTxZol6mhUPprMJUjP8009zUxiTjBaxh34JHDTEHxBNRqaBvLWjMqU6y5caCU/PrWDaGuYg1zmYVwY9K/MDn2R4pAiPAEhlUzs0wMK2szNGUaopIcqbzzISyeSIYqKo5HCKaS33ZtlUB16kWWGSZomko6+xE5ov4Q9URazNBvXJoyRWCgLSotIBu6ohu5sn3WY3ySsRlU4xTJozKzYhqbF2Y6wLPysrF7b6ugoQFzh8scFXQEhRLI8o5EeJi8CBxMIhk8h2xKPEQDygr6hlgv+ngCu3T0vyJZqIo7i+cBpP75nHtRc3Fx1ggH98VPPKGoTchPj/jEQnPRr7jnlEG5Aw82wWXe8y1HWvdt9RSXUqqVNMoXKHga16UWbXNNCioelyksEyk+gJhfgPTi3Xf6JDY0RAmkyEJbUIcQnyXEd+B0Bl7Y4dyfw9JIwGSt2RYO3bV1vJ0E9URqHZEdWVgPQXXSKocBmXQP2VV5vc+VI6TS8sn5CVpCx/+HGn9Gg11Z3/Vgp9IgB0kG7ReRZ+TPIsPKCCYC1Uy40kltCK6KeIIkLUi3lcotwWxDf7f6MF51cP/Xw9j/xDVGGkolQFDYrSEsFp9TBEz8MAesDzDNun1elcNndl/BKSa/bMa0zZGw3eesLxcC8G3CD81nt67acN4cpjxFS+OIbwzfKX7b0l35h7iVjRpqMRzbBKyu0X4E3D7iOfX3J7m0JtWAHYh1VcGc6kpzYEWO/v6TX3rKWZ6cyva+7t7sv199JJ29+ffJILNURdZh+L5ZfeI098ARgf5By2ybQ4xLIm5KMCqlhSqgzioi3j5x91qpTTVgg0YGdljezhhDvgTxybjiFLHCRlxie3YI3e9vr/OZvAZmO6euau+/wZEN8Ef0fDNywx1qn62AEb4zUcEk9QWffPpwTiN4Eener29sPPccxX/UsQdsoMHJ9Zwq+pmI+fHAOk9GdtOwGgYhElAzJ/ky94va8U3tLcbZzdFHIGyVsStgbmF2migHO67zJRpW5cZu+PLrhLDXu6/Mv+3Yf7939k54YRiFgAA</values>
+    </sys_hub_action_instance_v2>
+    <sys_hub_alias_mapping action="delete_multiple" query="source_id=2bfb9321c3e4d3107faa33bc05013195"/>
+    <sys_hub_action_instance_v2 action="INSERT_OR_UPDATE">
+        <action_type display_value="Send Email">c1806bf4a70323008299b39f087901cb</action_type>
+        <action_type_parent/>
+        <attributes/>
+        <comment/>
+        <compiled_snapshot/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <generation_source/>
+        <order>4</order>
+        <parent_ui_id>7f90470d-c792-461b-bc1a-e4d7905a2a14</parent_ui_id>
+        <sys_class_name>sys_hub_action_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:13:38</sys_created_on>
+        <sys_id>7f2b6e25c3a0d3107faa33bc05013176</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 10:16:11</sys_updated_on>
+        <ui_id>08a89ae0-4a0a-41d3-bc74-b0e0f5e71df6</ui_id>
+        <updation_source/>
+        <values>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</values>
+    </sys_hub_action_instance_v2>
+    <sys_hub_alias_mapping action="delete_multiple" query="source_id=7f2b6e25c3a0d3107faa33bc05013176"/>
+    <sys_hub_action_instance_v2 action="INSERT_OR_UPDATE">
+        <action_type display_value="Update Record">f9d01dd2c31332002841b63b12d3aea1</action_type>
+        <action_type_parent/>
+        <attributes/>
+        <comment/>
+        <compiled_snapshot/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <generation_source/>
+        <order>8</order>
+        <parent_ui_id>13be0a60-f046-4649-9c67-90209c5bc735</parent_ui_id>
+        <sys_class_name>sys_hub_action_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 13:51:30</sys_created_on>
+        <sys_id>c70d5b2dc3a4d3107faa33bc0501314f</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 13:54:44</sys_updated_on>
+        <ui_id>0f48dc32-6626-487a-b17e-0a8c2aa3205e</ui_id>
+        <updation_source/>
+        <values>H4sIAAAAAAAA/+1UXU/bMBT9K5WfqyhpCoO+ARXSJAYSMF4YtRz7Bqw5cWY7QFf1v+8mdtJSCgKJhzGNp/p+5ZzDufd6QaQgEzIGESf7yS5PkzQdxfFob5xku2mWjETKABIyJCUrACsNcG0Evu+ZqpvAYvG9EsyBoEnEa2OgdMsl5oW0lWLzq1CGEX4nlcA8mVzfDEnFDE50YMhksZF6KyTFMlBYet5h2sTo5lXzFprXBeKisguehM5pyAy+TjGDTQ2cJB4SeHRQCkAgOVMWhqRgJbLUZk4mztQYMMDEWanmfcWdLJ0nWrBHK3/jl8dxU5cDMuNBhP5Jg0A+nE+ZYxc4mbva9HppycF6TQTkrFbuaD3mC84qJ3XpWxzLVNetVV2Up14R0g9Y+3/UFkFA1fBskHta+cWdfjjvQB7LspUkUFSaM9W/mHNGZrVr4CwIKGg1LlhVyfKWVkbfy7YZoRTRrcJHlCv9gN+08raMGG9wR6gqi44xPm3DV8zIhsQ3HIPNyyGxc3ukmLUrKqgh/VU3SDyxQIG2KrQS0NYJTTM3snIH+Kl7CMCXw2D6ePSqw2BlqNbrds301jHjaGN76mQBP+o4TsWWTYhQhUpbDG10LJczBP2uCU/qsR8nutr6Rq7LXJoCxOylD/q62fZpPvl8af9Vmu+7RG/wSXeJjiUoYbcYJ1wiBwXqi3C8kZ4eo8uQHFyFZH+PPuwgJbtx+/f/LP29Zynbec1ufH/lrrWZq9P0SJPxzv6XJKWcZTTTNA4/9E/k/3zHjw4OB4d98n2b8Qao3WZcthbYDr1bjs3YyXrv4NQnwlLsfNhO7H2mbQg0Pv06vLQEN38AkEkxEpIKAAA=</values>
+    </sys_hub_action_instance_v2>
+    <sys_hub_alias_mapping action="delete_multiple" query="source_id=c70d5b2dc3a4d3107faa33bc0501314f"/>
+    <sys_hub_action_instance_v2 action="INSERT_OR_UPDATE">
+        <action_type display_value="Send Email">c1806bf4a70323008299b39f087901cb</action_type>
+        <action_type_parent/>
+        <attributes/>
+        <comment/>
+        <compiled_snapshot/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <generation_source/>
+        <order>11</order>
+        <parent_ui_id>2db05296-0715-4bb1-9f8f-e950f974583a</parent_ui_id>
+        <sys_class_name>sys_hub_action_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:04:23</sys_created_on>
+        <sys_id>fbff5fedc3e4d3107faa33bc050131c1</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:07:39</sys_updated_on>
+        <ui_id>53d33f30-e4ca-467c-94dc-e214e8289d58</ui_id>
+        <updation_source/>
+        <values>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</values>
+    </sys_hub_action_instance_v2>
+    <sys_hub_alias_mapping action="delete_multiple" query="source_id=fbff5fedc3e4d3107faa33bc050131c1"/>
+    <sys_hub_sub_flow_instance_v2 action="delete_multiple" query="flow=0f35622dc320d3107faa33bc0501318e"/>
+    <sys_hub_flow_logic_instance_v2 action="delete_multiple" query="flow=0f35622dc320d3107faa33bc0501318e^sys_idNOT IN0d2ce6a5c3a0d3107faa33bc05013117,1098a221c3a0d3107faa33bc05013179,3e9c5be5c3e4d3107faa33bc050131d2,40b8e621c3a0d3107faa33bc0501312d,6f79a2e9c360d3107faa33bc05013118,821edbe9c3e4d3107faa33bc05013173"/>
+    <sys_hub_flow_logic_instance_v2 action="INSERT_OR_UPDATE">
+        <attributes/>
+        <block display_value="">412ce6a5c3a0d3107faa33bc05013117</block>
+        <comment/>
+        <connected_to>7f90470d-c792-461b-bc1a-e4d7905a2a14</connected_to>
+        <decision_table/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <flow_variables_assigned/>
+        <generation_source/>
+        <logic_definition display_value="Else If">666e5545c3e232002841b63b12d3ae99</logic_definition>
+        <order>5</order>
+        <outputs_assigned/>
+        <parent_ui_id>56ce5f51-9519-4991-a357-dac7b865b35a</parent_ui_id>
+        <sys_class_name>sys_hub_flow_logic_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:17:49</sys_created_on>
+        <sys_id>0d2ce6a5c3a0d3107faa33bc05013117</sys_id>
+        <sys_mod_count>5</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 13:56:04</sys_updated_on>
+        <ui_id>d802b6d8-2a74-4179-af62-4ad2b1b20335</ui_id>
+        <updation_source/>
+        <values>H4sIAAAAAAAA/+1Vy27bMBD8FYNnWdAjNmzfUgcBCrQNkAS5tIGwplYxYYpU+LDjGv73LiXZCYoEddD01ps43F3OjDjSjmnvGu/srT63VjwoNvt+HzGhAkbPOyZKNmNVAlU65SnPs3GeJUk2OUsX43yRZmUOCCmLmIIaqZJrVQontCJoDdIHbLerpjlVQTacjJLJ8Cwf50OYZJPhaAJTPJsm42k6joXDOubeGFSuaHv3+x8+SfLSoOVLLL3EwuCjR+uwpPmlsI2E7d0/PoYvhaS93poGDCl1aNhs99vWqVZJWKCk0vkLr16xz22bAFlnhHro11/61psDqE0ZqGRJxPDJoSqJ8qwCaTFiNagSnDZbNnPGE2AQyislt8eKpVCOprFQ+2TFTwyTkiRUVki6OHa7x2XRe97B1QU4ICqeO2/6Ur7UgqPtHCmxAi/d/CXWFVw1rcq2xcFCHrq19LX61pnBjgMOr5gQb4kENkFp4N4LqW6WenN9YHkpVOtKvyk1B3lcgSPvFt4FPjuGEutwEWpoGnK0aIxei7aZuNTxg6RFXEm9oUNDPmLggXhMxkJ8SfhFC9+BEUHFVxpDzXQXbGG5Ec1BW3s420fMbu1cgrXPGsnc4tEHhp3iXlvR2RNa2kHndPAaexn76LRkZq9craIFnuM5XyJfDUQ1+KT1ijwYCDu4PkaBHt9M3Ds6PzRE2WshGnTZeFvve/KU/iFPPXJSoEaj/3n66zwFmguwghftv4nGhU/aBwbqPgSiO/RoNheWuN0G7PPhjxg2tnSjBH8JbbRZBVXP2P4XtJZZolsHAAA=</values>
+        <workflow_reference/>
+    </sys_hub_flow_logic_instance_v2>
+    <sys_hub_flow_logic_instance_v2 action="INSERT_OR_UPDATE">
+        <attributes/>
+        <block display_value="">5498a221c3a0d3107faa33bc05013178</block>
+        <comment/>
+        <connected_to/>
+        <decision_table/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <flow_variables_assigned/>
+        <generation_source/>
+        <logic_definition display_value="For Each">098e1dc5c3e232002841b63b12d3ae33</logic_definition>
+        <order>1</order>
+        <outputs_assigned/>
+        <parent_ui_id/>
+        <sys_class_name>sys_hub_flow_logic_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:02:12</sys_created_on>
+        <sys_id>1098a221c3a0d3107faa33bc05013179</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 10:02:44</sys_updated_on>
+        <ui_id>f93ea1a2-8508-4363-a828-58a9e4906916</ui_id>
+        <updation_source/>
+        <values>H4sIAAAAAAAA/41Ty27bMBD8F54FQZIDo/YtSBAgQNsASZpLEQhrcmURpUiWDzuqoH/v0nokyCknaYezuzMjamAmBhuDfzbX3sujZvvfrxmTOmH0PjAp2J6VO9HsymLHN9V2UxVF9e2qPGw3h7ISG0CxZRnT0CExZcDOU3kCFVM9DL+sgICiLnPegj7SWyNRCT+ORBPSWwX9y9fYvJVKOJxFWnC0M6Bj++HT0VdFKzigIur9rPqTidDbVDrkxokF+D73PK4oPZKIqsgYvgXUAml9A8pjxjrQZMi4nu2DiwQ4BPGgVb8yWqkDjWOJ++blP9pYFkUiNkiGOE6Ha1nPmU1wcwsBnmg0D9HNVN4aydFPUQhsIKpw8xGbCA82SKOnlgAHtXQbFTv9c0qCrQOWT0RI9CQCbTKapM8+mqfWnB8XlXdSX0KZD5XhoNYKQnDyEEPSMzBU2NGgugNrpT7W1pmTvDSTli4/KiryRpkzLU1XNAeehOeUK+R3hN9e4BdwMrn4QWOoecyY7/2NAu/fvVCI9d+YlEzOZg/1FENq4U7acE0LTjjLHV/TbZ5mr5ly6UnCc8Lul38lHfR0gyT/CJ2N+5PEv2Pjf3WL6AB1AwAA</values>
+        <workflow_reference/>
+    </sys_hub_flow_logic_instance_v2>
+    <sys_hub_flow_logic_instance_v2 action="INSERT_OR_UPDATE">
+        <attributes/>
+        <block display_value="">fa9c5be5c3e4d3107faa33bc050131d1</block>
+        <comment/>
+        <connected_to/>
+        <decision_table/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <flow_variables_assigned/>
+        <generation_source/>
+        <logic_definition display_value="If">af4e1945c3e232002841b63b12d3ae3e</logic_definition>
+        <order>7</order>
+        <outputs_assigned/>
+        <parent_ui_id>d802b6d8-2a74-4179-af62-4ad2b1b20335</parent_ui_id>
+        <sys_class_name>sys_hub_flow_logic_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 13:49:34</sys_created_on>
+        <sys_id>3e9c5be5c3e4d3107faa33bc050131d2</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 13:51:30</sys_updated_on>
+        <ui_id>13be0a60-f046-4649-9c67-90209c5bc735</ui_id>
+        <updation_source/>
+        <values>H4sIAAAAAAAA/+1V204bMRD9lcjPyWovBJq8IRBVpbZIgHgpaDVrzxKrXnvrC5BG+feOdzcXtakAlce+xccz43OOfbIrZoJvg3c35tQ5+aDZ/Nv9mEkdMfq9YlKwOZvBtJ5m6ZQX+XGRp2n+4Sirjosqy0UBeHTMxkxDg1TJjRbSS6MJegQVIrZapbwqBPVO0mlVTY4q4JNZlZ9MTjKc4SxLsxOABNrWGuopnQeP6/VdSNNC9CgKmiekaxUsb995LF9IJSwO0luwpMSjZfPVb1uvtUJBhYpKz/a8OGCPX7YRct5K/TCsPw+t1xvQWBGp5OmY4bNHLYjyvAblcMwa0AK8sUs29zYQYBHEpVbLbcVCak/TWKx9dvInxklpGitrJF0c+93tshw87uH6HDwQlcB9sEMpXxjJ0fWOCKwhKH+2j/UFl22nsmvxUKlNt1Gh0V97M9h2wOZKCQmOSGAblUbug5D6emGerjYsL6TuXBk2leGgtivw5F0VfOSzYqiwoUFlQxdOjpbx1mXXTFya5EHRIqmVeaJD4/tPgEfiCRkLyQXh5x18C1ZGFV9oDDXTW3Cl41a2G23d4Ww9Zm7pzhQ4t9NI5pY/QmTYKx60lb09saUbdEoHP+IgYz0eklenUGcznh1+blAceFplB+zid+ev0PEFiqBwdDqkYfTRgvaHYvVS+dvi8gr+f8Rl1Kfg78rekpzsheQMyKuiM53+T84/JyfSrMBJXnZfGRoX/7zeMTr38en3h27N5tIRt5uIfdp82+LGkl6U5PvQk7Hfo6odtv4FXR4S8iUHAAA=</values>
+        <workflow_reference/>
+    </sys_hub_flow_logic_instance_v2>
+    <sys_hub_flow_logic_instance_v2 action="INSERT_OR_UPDATE">
+        <attributes/>
+        <block display_value="">8cb82621c3a0d3107faa33bc05013173</block>
+        <comment/>
+        <connected_to/>
+        <decision_table/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <flow_variables_assigned/>
+        <generation_source/>
+        <logic_definition display_value="If">af4e1945c3e232002841b63b12d3ae3e</logic_definition>
+        <order>2</order>
+        <outputs_assigned/>
+        <parent_ui_id>f93ea1a2-8508-4363-a828-58a9e4906916</parent_ui_id>
+        <sys_class_name>sys_hub_flow_logic_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:02:44</sys_created_on>
+        <sys_id>40b8e621c3a0d3107faa33bc0501312d</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 10:17:49</sys_updated_on>
+        <ui_id>56ce5f51-9519-4991-a357-dac7b865b35a</ui_id>
+        <updation_source/>
+        <values>H4sIAAAAAAAA/+1VXWvbMBT9K0HPifFHHJK8lZTCYFth7fqyFnMjyYmoLHn6aJsZ//dd2U4a1o6mbOxpb9bR/TrH99gN0d7V3tlrfWat2Ciy/HY3JkIFDJ8bIhhZkgXkZZ7EOc3SWZbGcTqfJutZtk5SlgGfzsiYKKg4RlKtmHBCK4QeQPqANU25yDgkkE7meTyfTLNZNoF5Op/kc1jw6SKeLZJZJByvolJwyYpQrG1vfRxnrGm+1gwcZ0USUW8MVy6yDpy3bYtNmLC1hN3Nv+hFt0IyBHuRajCY6rghy+aXq1NFk7DmEkNXR6q9IqTb1QGyzgi1Gc4fh9SrPagNC6Ok8ZjwJ8cV4zhECdLyMalAIS1tdmTpjEfAcGCXSu4OEVuhHFYjIfbJih88VIrjEFly5EV5f3s4FoPwPVyegwMcxVPnzRBKt1pQbntFGC/BS7c6xvqAy7pj2aU4WMt9tpa+Up97McihwP49I+ItDsHrwDTMPhApr7b68ct+yguhOlWGS6kpyMMJHGq39i7M0xAueYWFigrqGhUtaqMfRJeMs1TRRuIhKqV+xKbBKRHQMHiEwkJ0gfh5B9+AEYHFJyyDybgLtrDUiHrPrWtO2jGxO7uSYO0zRxS3+O7DhD3jgVvRyxNSukJn2PiBDzTa8eDRMoYyWdDk9XWD7JXV6nb/yKi3+H44vR+JcnTVbf3oIlhktNqC2uA6vXDb2wnvs8wJHF5YZtQ74ffs3uOe5A33DMhJ9snz/+75Y/eEMddgBS26fxKWCx+wv2ifu7D+fdOD2FRYnO06YB/2f8JwscONEvQYetTmPrB6xtqfVCn9DFMHAAA=</values>
+        <workflow_reference/>
+    </sys_hub_flow_logic_instance_v2>
+    <sys_hub_flow_logic_instance_v2 action="INSERT_OR_UPDATE">
+        <attributes/>
+        <block display_value="">a379a2e9c360d3107faa33bc05013118</block>
+        <comment/>
+        <connected_to/>
+        <decision_table/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <flow_variables_assigned/>
+        <generation_source/>
+        <logic_definition display_value="If">af4e1945c3e232002841b63b12d3ae3e</logic_definition>
+        <order>3</order>
+        <outputs_assigned/>
+        <parent_ui_id>56ce5f51-9519-4991-a357-dac7b865b35a</parent_ui_id>
+        <sys_class_name>sys_hub_flow_logic_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:06:15</sys_created_on>
+        <sys_id>6f79a2e9c360d3107faa33bc05013118</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 10:13:39</sys_updated_on>
+        <ui_id>7f90470d-c792-461b-bc1a-e4d7905a2a14</ui_id>
+        <updation_source/>
+        <values>H4sIAAAAAAAA/+1Vy27bMBD8FYNnW9DDEmTfUgcBCrQN0AS5tIGwpqiYMEWqfNhxDf97l5L8QOogDtreehOHu8uZEUfaEuVs46y5V1fG8CdJpt8eh4RLj+HzlvCSTMkE0iqNwpQmcZbEYRjn42ieJfMoLhNg44wMiYSaYSVVsuSWK4nQCoTz2HZbTRIGEcSjPA3z0TjJkhHkcT5Kc5iw8STMJlEWcMvqgDqtmbRF27vbfXdhmJQUJGVCsBKHltw0AjYP/2I2XXBRYklnQgMaNVmmyXT7YutSUwTMmcDS2YkrZ4yym8ZDxmoun/r1p771bg8qXXoqcTgk7NkyWSLlaQXCsCGpQZZgld6QqdUOAc2gvJVic6hYcGlxGvG1z4b/ZH5SGPrKiqEuyrrdw7Loje7g6hosIBVHrdN9KV0oTpnpHClZBU7Y2SnWFdw2rcq2xcJc7LuVcLX80plBDgP27xURZ5AEa7xSz70XUt0t1PrrnuUNl60r/aZQFMRhBRa9mzvr+WwJE6z2b7+GpkFHi0arFW+bkUsdPAlcBJVQazzUJyEA6okHaCwEN4hft/ADaO5VfMYx2Ix3wRSGat7stbWHk92QmI2ZCTDmqBHNLX44z7BT3GsrOnt8SzvoCg9esV7GbthnsAqhiiY0On/dIDlztYoWOAZxtmB0OeDV4INSS/RgwM1g9nq23ip/X1wu4P9bXAZdCl5X9p7kRG8kp0cuik6a/k/OHyfH05yD4bRo/zc4zn+8/mJ0Hv3V7w49mE25QW73Hvu4/8v5jQ3eKE5PobXSS6/qiO1+AcT9czQvBwAA</values>
+        <workflow_reference/>
+    </sys_hub_flow_logic_instance_v2>
+    <sys_hub_flow_logic_instance_v2 action="INSERT_OR_UPDATE">
+        <attributes/>
+        <block display_value="">8a1edbe9c3e4d3107faa33bc05013172</block>
+        <comment/>
+        <connected_to>13be0a60-f046-4649-9c67-90209c5bc735</connected_to>
+        <decision_table/>
+        <display_text/>
+        <flow display_value="CAB Booking Lifecycle Notifications">0f35622dc320d3107faa33bc0501318e</flow>
+        <flow_variables_assigned/>
+        <generation_source/>
+        <logic_definition display_value="Else If">666e5545c3e232002841b63b12d3ae99</logic_definition>
+        <order>9</order>
+        <outputs_assigned/>
+        <parent_ui_id>d802b6d8-2a74-4179-af62-4ad2b1b20335</parent_ui_id>
+        <sys_class_name>sys_hub_flow_logic_instance_v2</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 13:56:04</sys_created_on>
+        <sys_id>821edbe9c3e4d3107faa33bc05013173</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:04:23</sys_updated_on>
+        <ui_id>2db05296-0715-4bb1-9f8f-e950f974583a</ui_id>
+        <updation_source/>
+        <values>H4sIAAAAAAAA/+1VTW/aQBD9K9GeDbJNCIUbIopUqW0kEuXSRtZ4dwzbLl53P0KoxX/vrG0+VBGFqhx7Y9/OzL73mAc1095V3tlHPbVWLko2+focMVkGjD7XTAo2YUUMRTLmCR+kN4M0jtMP10l+M8iTVAwAIWERK2GFVMl1KaSTuiToBZQPWF3HPB8I6u3FwzzvXefAe+M8HfVGCY5xnMTJCKAPVWU09WTWgcPt9puP44Ew+B25Q0HzhLSVgs3ThcfypVR07qRXYEiJQ8Mm9R9X51qhIEdFpbMjL07Y4zZVgKwzslx0509d68MO1EYEKmkcMXx1WAqiPClAWYzYCkoBTpsNmzjjCTAI4r5Um33FUpaOprFQ+2rlLwyT4jhUFki6OLa3+2PWedzCxS04ICqeO2+6Ur7UkqNtHRFYgFdudoy1BfdVo7JpcZCrXbdWflV+ac1g+wG7r5QQb4kEVkFp4N4JKR6Wej3fsbyTZeNKd6k0B7U/gSPvcu8Cn5qhwhUNyla0BuRoFnZBNs3EZdVfKDr0C6XX9GjY/z7wQLxPxkL/jvDbBn4CI4OKzzSGmmkXbGa5kdVOW/M420bMbuxMgbUHjWRu9tMHhq3iTlvW2hNamkFTevgFOxnb6LzkpSdWK2uAQ/zmaPkShVd4Ne2ycDV/M1XvVF80LOmpsFy1GXhb19/kJnknNx1yVnCGw/+5+efcBJo5WMmz5j+GxoWfrgsG5zksfvvo3mwuLXF7DNjH3T9buNjQRkl+DK21+RFUHbDtbww5T0cjBwAA</values>
+        <workflow_reference/>
+    </sys_hub_flow_logic_instance_v2>
+    <sys_hub_pill_compound action="delete_multiple" query="attached_to=0f35622dc320d3107faa33bc0501318e^sys_idNOT IN01cb6e65c3a0d3107faa33bc05013138,2bb06729c3e4d3107faa33bc05013117,45cb6e65c3a0d3107faa33bc05013138,6fb06729c3e4d3107faa33bc05013114,89cb6e65c3a0d3107faa33bc05013138,a7b06729c3e4d3107faa33bc05013116,abb06729c3e4d3107faa33bc05013115,c1cb6e25c3a0d3107faa33bc050131ab,cdcb6e65c3a0d3107faa33bc05013138,efb06729c3e4d3107faa33bc05013115,efb06729c3e4d3107faa33bc05013116"/>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.change_request}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:16:11</sys_created_on>
+        <sys_id>01cb6e65c3a0d3107faa33bc05013138</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 10:16:11</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>d54e88a8-f6f9-4b1d-b892-e63be7c5415a</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.change_request}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:07:39</sys_created_on>
+        <sys_id>2bb06729c3e4d3107faa33bc05013117</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:07:39</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>a9b1cdff-52bc-491b-b0c3-69f3e5e4cf73</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.number}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:16:11</sys_created_on>
+        <sys_id>45cb6e65c3a0d3107faa33bc05013138</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 10:16:11</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>0e6c4d59-b496-4dc2-b7e0-a9d5da6d5e6d</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.proposed_start_date_time}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:07:39</sys_created_on>
+        <sys_id>6fb06729c3e4d3107faa33bc05013114</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:07:39</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>cd0cca27-59fd-42ac-80e8-6071693e0d38</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.end_date_time}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:16:11</sys_created_on>
+        <sys_id>89cb6e65c3a0d3107faa33bc05013138</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 10:16:11</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>7ddf10ff-074c-4baa-80ed-8f7df2ff13e3</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.number}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:07:39</sys_created_on>
+        <sys_id>a7b06729c3e4d3107faa33bc05013116</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:07:39</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>c1739150-b8c8-431f-ab10-31b4d0a22457</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.start_date_time}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:07:39</sys_created_on>
+        <sys_id>abb06729c3e4d3107faa33bc05013115</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:07:39</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>7cd97e56-b9e3-45d5-b527-9aacf142bf9d</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.start_date_time}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:16:11</sys_created_on>
+        <sys_id>c1cb6e25c3a0d3107faa33bc050131ab</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 10:16:11</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>ac6be16a-92a3-4f8c-a717-c747bb235b64</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.agenda}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 10:16:11</sys_created_on>
+        <sys_id>cdcb6e65c3a0d3107faa33bc05013138</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 10:16:11</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>b958e56e-48fb-4854-a338-aff8edc87735</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.end_date_time}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:07:39</sys_created_on>
+        <sys_id>efb06729c3e4d3107faa33bc05013115</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:07:39</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>e11c8cb4-4a0e-42a7-9c91-7615b164f9f5</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_pill_compound action="INSERT_OR_UPDATE">
+        <attached_to>0f35622dc320d3107faa33bc0501318e</attached_to>
+        <extra_info/>
+        <order>0</order>
+        <prescription>{{Updated_1.current.proposed_end_date_time}}</prescription>
+        <source_ui_id/>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:07:39</sys_created_on>
+        <sys_id>efb06729c3e4d3107faa33bc05013116</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:07:39</sys_updated_on>
+        <transform_compositions>[]</transform_compositions>
+        <transform_definition_id/>
+        <ui_id>5ecc7e6e-cbfa-42c7-aea8-3064c890e134</ui_id>
+    </sys_hub_pill_compound>
+    <sys_hub_flow_variable action="delete_multiple" query="model=0f35622dc320d3107faa33bc0501318e"/>
+    <sys_choice action="delete_multiple" query="name=var__m_sys_hub_flow_variable_0f35622dc320d3107faa33bc0501318e"/>
+    <sys_documentation action="INSERT_OR_UPDATE">
+        <element>current</element>
+        <help/>
+        <hint/>
+        <label>Record</label>
+        <language>en</language>
+        <name>var__m_sys_hub_flow_input_0f35622dc320d3107faa33bc0501318e</name>
+        <plural/>
+        <sys_class_name>sys_documentation</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 09:49:32</sys_created_on>
+        <sys_id>32a562a9c360d3107faa33bc05013162</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name/>
+        <sys_package display_value="CAB Booking Automation" source="x_1459713_cab_bo_0">c317a565c3a893107faa33bc05013129</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_update_name/>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 09:49:32</sys_updated_on>
+        <url/>
+        <url_target/>
+    </sys_documentation>
+    <sys_documentation action="INSERT_OR_UPDATE">
+        <element>changed_fields</element>
+        <help/>
+        <hint/>
+        <label>Changed Fields</label>
+        <language>en</language>
+        <name>var__m_sys_hub_flow_input_0f35622dc320d3107faa33bc0501318e</name>
+        <plural/>
+        <sys_class_name>sys_documentation</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 09:49:32</sys_created_on>
+        <sys_id>72a562a9c360d3107faa33bc0501316e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name/>
+        <sys_package display_value="CAB Booking Automation" source="x_1459713_cab_bo_0">c317a565c3a893107faa33bc05013129</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_update_name/>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 09:49:32</sys_updated_on>
+        <url/>
+        <url_target/>
+    </sys_documentation>
+    <sys_documentation action="INSERT_OR_UPDATE">
+        <element>table_name</element>
+        <help/>
+        <hint/>
+        <label>Table Name</label>
+        <language>en</language>
+        <name>var__m_sys_hub_flow_input_0f35622dc320d3107faa33bc0501318e</name>
+        <plural/>
+        <sys_class_name>sys_documentation</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 09:49:32</sys_created_on>
+        <sys_id>fea562a9c360d3107faa33bc05013154</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name/>
+        <sys_package display_value="CAB Booking Automation" source="x_1459713_cab_bo_0">c317a565c3a893107faa33bc05013129</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_update_name/>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 09:49:32</sys_updated_on>
+        <url/>
+        <url_target/>
+    </sys_documentation>
+    <sys_choice action="delete_multiple" query="name=var__m_sys_hub_flow_input_0f35622dc320d3107faa33bc0501318e"/>
+    <sys_choice action="delete_multiple" query="name=var__m_sys_hub_flow_output_0f35622dc320d3107faa33bc0501318e"/>
+    <sys_flow_trigger_plan action="delete_multiple" query="plan_id=0f35622dc320d3107faa33bc0501318e"/>
+    <sys_flow_subflow_plan action="delete_multiple" query="plan_id=0f35622dc320d3107faa33bc0501318e"/>
+</record_update>
