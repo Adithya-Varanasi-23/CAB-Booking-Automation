@@ -1,0 +1,4299 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[
+api.controller = function ($scope) {
+
+    var c = this;
+
+    // =========================================
+    // INITIAL STATE
+    // =========================================
+
+    c.view = 'dashboard';
+    c.busy = false;
+
+    c.notice = '';
+    c.noticeType = 'info';
+
+    c.form = {};
+
+    c.bookingSearch = '';
+    c.bookingStatus = 'all';
+
+    c.rescheduleTarget = null;
+    c.rescheduleForm = {};
+
+
+    // =========================================
+    // NAVIGATION
+    // =========================================
+
+    c.setView = function (view) {
+
+        c.view = view;
+
+        c.notice = '';
+        c.rescheduleTarget = null;
+
+        c.bookingSearch = '';
+        c.bookingStatus = 'all';
+    };
+
+
+    // =========================================
+    // DATE FORMAT
+    // =========================================
+
+    function toLocalDateTime(value) {
+
+        if (!(value instanceof Date) || isNaN(value.getTime())) {
+            return '';
+        }
+
+        function pad(n) {
+            return n < 10 ? '0' + n : String(n);
+        }
+
+        return value.getFullYear() + '-' +
+            pad(value.getMonth() + 1) + '-' +
+            pad(value.getDate()) + ' ' +
+            pad(value.getHours()) + ':' +
+            pad(value.getMinutes()) + ':00';
+
+    }
+
+
+    // =========================================
+    // SERVER COMMUNICATION
+    // =========================================
+
+    function sendAction(payload, callback) {
+
+        c.busy = true;
+        c.notice = '';
+
+        return c.server.get(payload).then(
+
+            function (response) {
+
+                c.busy = false;
+
+                if (!response || !response.data) {
+
+                    c.notice = 'No response received from the server.';
+                    c.noticeType = 'error';
+
+                    return;
+                }
+
+                angular.extend(c.data, response.data);
+
+                var result = response.data.actionResult;
+
+                if (result) {
+
+                    c.notice = result.message;
+
+                    c.noticeType =
+                        result.ok ? 'success' : 'error';
+
+                    if (result.ok && callback) {
+                        callback();
+                    }
+                }
+
+            },
+
+            function () {
+
+                c.busy = false;
+
+                c.notice =
+                    'Something went wrong. Please try again.';
+
+                c.noticeType = 'error';
+
+            }
+
+        );
+    }
+
+
+    // =========================================
+    // REFRESH DATA
+    // =========================================
+
+    c.refreshData = function () {
+
+        c.busy = true;
+
+        return c.server.refresh().then(
+            function () {
+
+                c.busy = false;
+
+                c.notice = 'Booking information refreshed.';
+                c.noticeType = 'success';
+
+            },
+            function () {
+
+                c.busy = false;
+
+                c.notice = 'Unable to refresh booking information.';
+                c.noticeType = 'error';
+
+            }
+        );
+    };
+
+
+    // =========================================
+    // SEARCH AND FILTER
+    // =========================================
+
+    c.filterBooking = function (booking) {
+
+        var query =
+            (c.bookingSearch || '').toLowerCase().trim();
+
+        var searchText = [
+
+            booking.number,
+            booking.changeRequest,
+            booking.agenda,
+            booking.location,
+            booking.status
+
+        ].join(' ').toLowerCase();
+
+        var matchesSearch =
+            !query || searchText.indexOf(query) !== -1;
+
+        var matchesStatus =
+            c.bookingStatus === 'all' ||
+            booking.statusValue === c.bookingStatus;
+
+        return matchesSearch && matchesStatus;
+
+    };
+
+
+    // =========================================
+    // CREATE BOOKING
+    // =========================================
+
+    c.submitBooking = function () {
+
+        if (
+            !c.form.change_request ||
+            !c.form.startDateTime ||
+            !c.form.endDateTime ||
+            !c.form.agenda
+        ) {
+
+            c.notice = 'Please complete all required fields.';
+            c.noticeType = 'error';
+
+            return;
+        }
+
+        var start = toLocalDateTime(c.form.startDateTime);
+        var end = toLocalDateTime(c.form.endDateTime);
+
+        if (
+            !start ||
+            !end ||
+            c.form.endDateTime <= c.form.startDateTime
+        ) {
+
+            c.notice = 'End Date/Time must be later than Start Date/Time.';
+            c.noticeType = 'error';
+
+            return;
+        }
+
+        var payload = {
+
+            action: 'create',
+
+            payload: {
+
+                change_request: c.form.change_request,
+
+                startDateTime: start,
+
+                endDateTime: end,
+
+                agenda: c.form.agenda,
+
+                meeting_location:
+                    c.form.meeting_location || ''
+
+            }
+
+        };
+
+        sendAction(payload, function () {
+
+            c.form = {};
+
+            c.view = 'my';
+
+            c.bookingSearch = '';
+            c.bookingStatus = 'all';
+
+        });
+
+    };
+
+
+    // =========================================
+    // CANCEL BOOKING
+    // =========================================
+
+    c.cancelBooking = function (booking) {
+
+        var confirmed = window.confirm(
+            'Are you sure you want to cancel ' +
+            booking.number + '?'
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        sendAction({
+
+            action: 'cancel',
+
+            sys_id: booking.sys_id
+
+        });
+    };
+
+
+    // =========================================
+    // OPEN RESCHEDULING FORM
+    // =========================================
+
+    c.openReschedule = function (booking) {
+
+        c.rescheduleTarget = booking;
+
+        c.rescheduleForm = {};
+
+        c.notice = '';
+
+    };
+
+
+    c.closeReschedule = function () {
+
+        c.rescheduleTarget = null;
+
+        c.rescheduleForm = {};
+
+    };
+
+
+    // =========================================
+    // SUBMIT RESCHEDULING
+    // =========================================
+
+    c.submitReschedule = function () {
+
+        if (
+            !c.rescheduleTarget ||
+            !c.rescheduleForm.startDateTime ||
+            !c.rescheduleForm.endDateTime
+        ) {
+
+            c.notice = 'Please enter both proposed meeting dates.';
+            c.noticeType = 'error';
+
+            return;
+        }
+
+        var start = toLocalDateTime(
+            c.rescheduleForm.startDateTime
+        );
+
+        var end = toLocalDateTime(
+            c.rescheduleForm.endDateTime
+        );
+
+        if (
+            !start ||
+            !end ||
+            c.rescheduleForm.endDateTime <=
+            c.rescheduleForm.startDateTime
+        ) {
+
+            c.notice =
+                'Proposed end time must be later than proposed start time.';
+
+            c.noticeType = 'error';
+
+            return;
+        }
+
+        sendAction({
+
+            action: 'reschedule',
+
+            sys_id: c.rescheduleTarget.sys_id,
+
+            payload: {
+
+                startDateTime: start,
+
+                endDateTime: end
+
+            }
+
+        }, function () {
+
+            c.rescheduleTarget = null;
+
+            c.rescheduleForm = {};
+
+            c.view = 'my';
+
+        });
+
+    };
+
+
+    // =========================================
+    // STATUS BADGES
+    // =========================================
+
+    c.statusClass = function (status) {
+
+        switch (status) {
+
+            case 'confirmed':
+                return 'confirmed';
+
+            case 'pending_approval':
+            case 'requested':
+                return 'pending';
+
+            case 'rejected':
+                return 'rejected';
+
+            case 'cancelled':
+                return 'cancelled';
+
+            case 'reschedule_requested':
+                return 'reschedule';
+
+            case 'completed':
+                return 'completed';
+
+            default:
+                return 'default';
+
+        }
+
+    };
+
+
+    // =========================================
+    // COUNT FILTERED BOOKINGS
+    // =========================================
+
+    c.countFilteredBookings = function () {
+
+        var bookings = c.data.myBookings || [];
+
+        var count = 0;
+
+        angular.forEach(bookings, function (booking) {
+
+            if (c.filterBooking(booking)) {
+                count++;
+            }
+
+        });
+
+        return count;
+
+    };
+
+
+};
+]]></client_script>
+        <controller_as>c</controller_as>
+        <css>
+/* =========================================
+   CAB BOOKING WORKSPACE
+   PREMIUM UBER-INSPIRED DESIGN
+   ========================================= */
+
+.cab-app {
+    --black: #000000;
+    --dark: #171717;
+    --charcoal: #292929;
+    --grey: #6B6B6B;
+    --muted: #8A8A8A;
+    --line: #E6E6E6;
+    --canvas: #F5F5F5;
+    --white: #FFFFFF;
+
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    background: var(--canvas);
+    color: var(--black);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.cab-app *,
+.cab-app *::before,
+.cab-app *::after {
+    box-sizing: border-box;
+}
+
+.cab-app button,
+.cab-app input,
+.cab-app select,
+.cab-app textarea {
+    font-family: inherit;
+}
+
+
+/* =========================================
+   TOP BAR
+   ========================================= */
+
+.cab-topbar {
+    width: 100%;
+    min-height: 76px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E9E9E9;
+    padding: 12px 35px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cab-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.cab-brand-logo {
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 950;
+    letter-spacing: -2px;
+    color: #000000;
+}
+
+.cab-brand-divider {
+    width: 1px;
+    height: 31px;
+    background: #DDDDDD;
+}
+
+.cab-brand-name {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cab-brand-name strong {
+    font-size: 11px;
+    letter-spacing: 1.3px;
+    font-weight: 850;
+    color: #000000;
+}
+
+.cab-brand-name span {
+    font-size: 9px;
+    color: #858585;
+    letter-spacing: 0.8px;
+}
+
+.cab-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cab-icon-button {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    border-radius: 50%;
+    color: #000000;
+    cursor: pointer;
+}
+
+.cab-icon-button:hover {
+    background: #F1F1F1;
+}
+
+.cab-icon-button svg {
+    width: 17px;
+    height: 17px;
+}
+
+.cab-user-avatar {
+    width: 37px;
+    height: 37px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #000000;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.cab-user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cab-user-details strong {
+    color: #000000;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.cab-user-details span {
+    color: #888888;
+    font-size: 9px;
+}
+
+
+/* =========================================
+   PAGE LAYOUT
+   ========================================= */
+
+.cab-layout {
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    min-height: calc(100vh - 76px);
+}
+
+.cab-sidebar {
+    background: #000000;
+    color: #FFFFFF;
+    padding: 30px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cab-sidebar-section {
+    padding: 6px 12px;
+    margin-bottom: 12px;
+    color: #8B8B8B;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: 1.4px;
+}
+
+.cab-sidebar-spaced {
+    margin-top: 30px;
+}
+
+.cab-nav-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 47px;
+    padding: 11px 13px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #BEBEBE;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.cab-nav-item:hover {
+    background: #222222;
+    color: #FFFFFF;
+}
+
+.cab-nav-item.active {
+    background: #292929;
+    color: #FFFFFF;
+    box-shadow: inset 3px 0 #FFFFFF;
+}
+
+.cab-nav-item svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cab-nav-item span:first-of-type {
+    flex: 1;
+}
+
+.cab-nav-number {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    display: grid;
+    place-items: center;
+    border-radius: 50px;
+    background: #FFFFFF;
+    color: #000000;
+    font-size: 9px;
+    font-weight: 850;
+}
+
+.cab-sidebar-bottom {
+    margin-top: auto;
+    padding: 15px 12px 0;
+}
+
+.cab-sidebar-divider {
+    height: 1px;
+    background: #333333;
+    margin-bottom: 20px;
+}
+
+.cab-sidebar-product {
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: 0.7px;
+    color: #FFFFFF;
+}
+
+.cab-sidebar-caption {
+    margin-top: 7px;
+    font-size: 9px;
+    color: #A1A1A1;
+}
+
+.cab-sidebar-version {
+    margin-top: 16px;
+    color: #686868;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+}
+
+
+/* =========================================
+   MAIN AREA
+   ========================================= */
+
+.cab-main {
+    min-width: 0;
+    padding: 32px;
+    background: #F5F5F5;
+}
+
+.cab-overline {
+    color: #797979;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: 1.3px;
+}
+
+.cab-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin: 37px 0 19px;
+}
+
+.cab-section-heading h2 {
+    font-size: 20px;
+    font-weight: 850;
+    letter-spacing: -0.5px;
+    color: #000000;
+    margin: 7px 0 0;
+}
+
+.cab-live-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #666666;
+    font-size: 8px;
+    letter-spacing: 0.9px;
+    font-weight: 850;
+}
+
+.cab-live-label span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #248447;
+}
+
+
+/* =========================================
+   HERO
+   ========================================= */
+
+.cab-hero {
+    min-height: 305px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #000000;
+    color: #FFFFFF;
+    padding: 35px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cab-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 520px;
+}
+
+.cab-hero-label {
+    color: #BBBBBB;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: 1.8px;
+    margin-bottom: 17px;
+}
+
+.cab-hero h1 {
+    color: #FFFFFF;
+    font-size: clamp(32px, 3.8vw, 49px);
+    line-height: 1.05;
+    letter-spacing: -2.3px;
+    font-weight: 850;
+    margin: 0 0 16px;
+}
+
+.cab-hero-content &gt; p {
+    max-width: 410px;
+    color: #B8B8B8;
+    font-size: 12px;
+    line-height: 1.8;
+    margin: 0 0 24px;
+}
+
+.cab-hero-button {
+    background: #FFFFFF;
+    color: #000000;
+    border: 1px solid #FFFFFF;
+    border-radius: 5px;
+    padding: 13px 19px;
+    display: inline-flex;
+    align-items: center;
+    gap: 21px;
+    font-size: 10px;
+    font-weight: 850;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cab-hero-button:hover {
+    background: #DDDDDD;
+    border-color: #DDDDDD;
+}
+
+.cab-hero-button svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cab-hero-decoration {
+    position: absolute;
+    width: 42%;
+    height: 100%;
+    right: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+.cab-hero-circle {
+    width: 310px;
+    height: 310px;
+    border: 1px solid #484848;
+    border-radius: 50%;
+    position: absolute;
+    top: -35px;
+    right: -50px;
+}
+
+.cab-hero-circle::before,
+.cab-hero-circle::after {
+    content: "";
+    position: absolute;
+    inset: 23px;
+    border: 1px solid #333333;
+    border-radius: 50%;
+}
+
+.cab-hero-circle::after {
+    inset: 53px;
+    border-color: #555555;
+}
+
+.cab-hero-card {
+    position: absolute;
+    right: 31px;
+    bottom: 40px;
+    min-width: 195px;
+    background: #171717;
+    border: 1px solid #474747;
+    padding: 19px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.cab-hero-card span {
+    color: #949494;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    margin-bottom: 5px;
+}
+
+.cab-hero-card strong {
+    color: #FFFFFF;
+    font-size: 12px;
+    letter-spacing: 0.7px;
+}
+
+.cab-hero-index {
+    position: absolute;
+    bottom: 14px;
+    right: 19px;
+    color: #888888;
+    font-size: 8px;
+    letter-spacing: 1.1px;
+    font-weight: 800;
+}
+
+
+/* =========================================
+   STATISTICS
+   ========================================= */
+
+.cab-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.cab-stat-card {
+    min-width: 0;
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    border-radius: 9px;
+    padding: 20px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.cab-stat-card:hover {
+    transform: translateY(-2px);
+    border-color: #BBBBBB;
+}
+
+.cab-stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: #777777;
+    font-size: 8px;
+    font-weight: 850;
+    letter-spacing: 0.8px;
+}
+
+.cab-stat-icon {
+    width: 29px;
+    height: 29px;
+    background: #F2F2F2;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+}
+
+.cab-stat-icon svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: #000000;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cab-stat-value {
+    color: #000000;
+    font-size: 36px;
+    line-height: 1.2;
+    letter-spacing: -1.5px;
+    font-weight: 850;
+    margin: 14px 0 6px;
+}
+
+.cab-stat-footer {
+    color: #888888;
+    font-size: 9px;
+}
+
+
+/* =========================================
+   CONTENT PANELS
+   ========================================= */
+
+.cab-content-panel {
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    border-radius: 9px;
+    padding: 24px;
+    margin-bottom: 19px;
+}
+
+.cab-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding-bottom: 19px;
+}
+
+.cab-panel-heading h2 {
+    margin: 6px 0;
+    font-size: 17px;
+    font-weight: 850;
+    letter-spacing: -0.4px;
+    color: #000000;
+}
+
+.cab-panel-heading p {
+    margin: 0;
+    color: #888888;
+    font-size: 10px;
+}
+
+.cab-view-all {
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #000000;
+    font-size: 10px;
+    font-weight: 850;
+    cursor: pointer;
+}
+
+.cab-view-all svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* =========================================
+   RECENT BOOKING ROW
+   ========================================= */
+
+.cab-recent-row {
+    min-height: 69px;
+    border-top: 1px solid #EEEEEE;
+    display: grid;
+    grid-template-columns: minmax(160px, 1.2fr) minmax(140px, 1fr) auto;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 0;
+}
+
+.cab-recent-reference {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.cab-recent-file {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    background: #F1F1F1;
+}
+
+.cab-recent-file svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: #000000;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+}
+
+.cab-recent-reference &gt; div:last-child {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.cab-recent-reference strong {
+    font-size: 11px;
+    color: #000000;
+    font-weight: 850;
+}
+
+.cab-recent-reference span {
+    color: #838383;
+    font-size: 9px;
+}
+
+.cab-recent-date {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.cab-recent-date span {
+    font-size: 8px;
+    font-weight: 800;
+    color: #929292;
+    letter-spacing: 0.7px;
+}
+
+.cab-recent-date strong {
+    font-size: 10px;
+    color: #333333;
+}
+
+
+/* =========================================
+   QUICK ACTIONS
+   ========================================= */
+
+.cab-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 17px;
+}
+
+.cab-quick-card {
+    background: #FFFFFF;
+    border: 1px solid #E4E4E4;
+    border-radius: 9px;
+    padding: 21px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 10px;
+    cursor: pointer;
+    min-width: 0;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.cab-quick-card:hover {
+    border-color: #000000;
+    transform: translateY(-2px);
+}
+
+.cab-quick-icon {
+    width: 37px;
+    height: 37px;
+    background: #F0F0F0;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+}
+
+.cab-quick-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: #000000;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cab-quick-card strong {
+    font-size: 12px;
+    font-weight: 850;
+    color: #000000;
+}
+
+.cab-quick-card span:not(.cab-quick-icon) {
+    font-size: 10px;
+    color: #858585;
+    line-height: 1.5;
+}
+
+.cab-quick-card em {
+    color: #000000;
+    font-size: 9px;
+    font-weight: 850;
+    font-style: normal;
+    margin-top: 5px;
+}
+
+
+/* =========================================
+   STATUS BADGES
+   ========================================= */
+
+.cab-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 30px;
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: 850;
+}
+
+.status-confirmed {
+    color: #236D39;
+    background: #E3F2E6;
+}
+
+.status-pending {
+    color: #8A6012;
+    background: #FFF1D4;
+}
+
+.status-rejected {
+    color: #A52B2B;
+    background: #FCE7E7;
+}
+
+.status-cancelled {
+    color: #656565;
+    background: #EEEEEE;
+}
+
+.status-reschedule {
+    color: #554B95;
+    background: #ECEAFF;
+}
+
+.status-completed {
+    color: #246A7B;
+    background: #E1F1F3;
+}
+
+.status-default {
+    color: #555555;
+    background: #F0F0F0;
+}
+
+
+/* =========================================
+   PAGE HEADINGS
+   ========================================= */
+
+.cab-page-title {
+    margin-bottom: 28px;
+}
+
+.cab-page-title h1 {
+    color: #000000;
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -1.3px;
+    margin: 8px 0 8px;
+}
+
+.cab-page-title &gt; p,
+.cab-page-title &gt; div &gt; p {
+    color: #797979;
+    font-size: 11px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.cab-page-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+
+/* =========================================
+   BUTTONS
+   ========================================= */
+
+.cab-black-button,
+.cab-outline-button,
+.cab-cancel-button {
+    border-radius: 5px;
+    min-height: 42px;
+    padding: 11px 17px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 10px;
+    font-weight: 850;
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.cab-black-button {
+    color: #FFFFFF !important;
+    background: #000000;
+    border: 1px solid #000000;
+}
+
+.cab-black-button:hover {
+    background: #303030;
+    border-color: #303030;
+}
+
+.cab-black-button svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cab-outline-button {
+    color: #000000 !important;
+    background: #FFFFFF;
+    border: 1px solid #D4D4D4;
+}
+
+.cab-outline-button:hover {
+    border-color: #000000;
+    background: #F5F5F5;
+}
+
+.cab-cancel-button {
+    color: #A82F2F !important;
+    background: #FFFFFF;
+    border: 1px solid #E5BEBE;
+}
+
+.cab-cancel-button:hover {
+    background: #FFF0F0;
+}
+
+.cab-black-button:disabled,
+.cab-outline-button:disabled,
+.cab-cancel-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* =========================================
+   FORM LAYOUT
+   ========================================= */
+
+.cab-form-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 285px;
+    gap: 18px;
+    align-items: start;
+}
+
+.cab-form-panel {
+    min-width: 0;
+}
+
+.cab-form-heading {
+    display: flex;
+    gap: 13px;
+    align-items: flex-start;
+    margin: 4px 0 22px;
+}
+
+.cab-form-heading &gt; span {
+    width: 27px;
+    height: 27px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: #000000;
+    color: #FFFFFF;
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: 850;
+}
+
+.cab-form-heading h2 {
+    margin: 1px 0 5px;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 850;
+}
+
+.cab-form-heading p {
+    color: #898989;
+    font-size: 10px;
+    margin: 0;
+}
+
+.cab-form-divider {
+    border-top: 1px solid #EAEAEA;
+    margin: 22px 0;
+}
+
+.cab-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.cab-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 19px;
+}
+
+.cab-field label {
+    color: #333333;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: 0.7px;
+    margin-bottom: 8px;
+}
+
+.cab-field label b {
+    color: #BC3434;
+}
+
+.cab-field input,
+.cab-field select,
+.cab-field textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 43px;
+    border: 1px solid #D8D8D8;
+    border-radius: 5px;
+    padding: 12px;
+    background: #FFFFFF;
+    color: #000000;
+    font-family: inherit;
+    font-size: 11px;
+    outline: none;
+}
+
+.cab-field input:focus,
+.cab-field select:focus,
+.cab-field textarea:focus {
+    border-color: #000000;
+    box-shadow: 0 0 0 2px #EEEEEE;
+}
+
+.cab-field input:disabled {
+    background: #F1F1F1;
+    color: #6D6D6D;
+}
+
+.cab-field textarea {
+    min-height: 105px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.cab-field small {
+    font-size: 9px;
+    color: #929292;
+    margin-top: 6px;
+}
+
+.cab-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 19px;
+    border-top: 1px solid #EEEEEE;
+    margin-top: 19px;
+}
+
+
+/* =========================================
+   FORM INFORMATION PANEL
+   ========================================= */
+
+.cab-form-info {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.cab-info-black {
+    background: #000000;
+    color: #FFFFFF;
+    padding: 22px;
+    border-radius: 8px;
+}
+
+.cab-overline-light {
+    color: #A0A0A0;
+    font-size: 8px;
+    letter-spacing: 1.2px;
+    font-weight: 850;
+}
+
+.cab-info-black h3 {
+    font-size: 19px;
+    font-weight: 850;
+    letter-spacing: -0.4px;
+    line-height: 1.35;
+    color: #FFFFFF;
+    margin: 13px 0 24px;
+}
+
+.cab-process-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 0 0 18px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #333333;
+}
+
+.cab-process-item:last-child {
+    margin: 0;
+    border: 0;
+    padding-bottom: 0;
+}
+
+.cab-process-item &gt; span {
+    font-size: 9px;
+    font-weight: 850;
+    color: #A2A2A2;
+    min-width: 22px;
+}
+
+.cab-process-item strong {
+    display: block;
+    font-size: 10px;
+    color: #FFFFFF;
+    margin-bottom: 5px;
+}
+
+.cab-process-item p {
+    color: #ADADAD;
+    font-size: 9px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.cab-info-note {
+    background: #FFFFFF;
+    border: 1px solid #E3E3E3;
+    padding: 17px;
+    border-radius: 7px;
+}
+
+.cab-info-note strong {
+    font-size: 10px;
+    color: #000000;
+}
+
+.cab-info-note p {
+    color: #777777;
+    font-size: 9px;
+    line-height: 1.7;
+    margin: 7px 0 0;
+}
+
+
+/* =========================================
+   SEARCH AND FILTERS
+   ========================================= */
+
+.cab-filter-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 205px auto;
+    align-items: center;
+    gap: 14px;
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 17px;
+}
+
+.cab-search-box {
+    height: 42px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #F7F7F7;
+    border: 1px solid #E7E7E7;
+    padding: 0 12px;
+    border-radius: 5px;
+}
+
+.cab-search-box svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    stroke: #555555;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+}
+
+.cab-search-box input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #000000;
+    font-size: 10px;
+}
+
+.cab-status-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.cab-status-filter label {
+    color: #7D7D7D;
+    font-size: 8px;
+    font-weight: 850;
+    letter-spacing: 0.8px;
+}
+
+.cab-status-filter select {
+    width: 100%;
+    height: 42px;
+    border-radius: 5px;
+    border: 1px solid #DDDDDD;
+    background: #FFFFFF;
+    color: #000000;
+    font-size: 10px;
+    padding: 0 9px;
+}
+
+.cab-result-count {
+    color: #777777;
+    font-size: 8px;
+    font-weight: 850;
+    letter-spacing: 0.7px;
+    white-space: nowrap;
+}
+
+
+/* =========================================
+   MY BOOKINGS
+   ========================================= */
+
+.cab-booking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.cab-booking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #EEEEEE;
+}
+
+.cab-booking-header h2 {
+    color: #000000;
+    font-size: 17px;
+    font-weight: 900;
+    margin: 6px 0 4px;
+}
+
+.cab-change-number {
+    color: #858585;
+    font-size: 9px;
+}
+
+.cab-booking-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    padding: 19px 0;
+}
+
+.cab-booking-info-grid &gt; div {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.cab-booking-info-grid span,
+.cab-agenda-display &gt; span {
+    color: #8A8A8A;
+    font-size: 8px;
+    font-weight: 850;
+    letter-spacing: 0.8px;
+}
+
+.cab-booking-info-grid strong {
+    color: #252525;
+    font-size: 10px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.cab-agenda-display {
+    border-radius: 5px;
+    background: #F7F7F7;
+    padding: 15px;
+}
+
+.cab-agenda-display p {
+    color: #535353;
+    font-size: 10px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin: 8px 0 0;
+}
+
+.cab-booking-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 17px;
+}
+
+.cab-proposed-box {
+    margin-top: 14px;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 3px solid #000000;
+    background: #F5F5F5;
+}
+
+.cab-proposed-box strong {
+    display: block;
+    color: #000000;
+    font-size: 9px;
+    letter-spacing: 0.7px;
+}
+
+.cab-proposed-box p {
+    color: #555555;
+    font-size: 10px;
+    margin: 7px 0;
+}
+
+.cab-proposed-box small {
+    color: #777777;
+    font-size: 9px;
+}
+
+.cab-reschedule-form {
+    margin-top: 19px;
+    border: 1px solid #DDDDDD;
+    background: #F8F8F8;
+    border-radius: 7px;
+    padding: 19px;
+}
+
+.cab-reschedule-form h3 {
+    margin: 0 0 7px;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 850;
+}
+
+.cab-reschedule-form &gt; p {
+    color: #777777;
+    font-size: 10px;
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+
+/* =========================================
+   COORDINATOR TABLE
+   ========================================= */
+
+.cab-table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.cab-table {
+    width: 100%;
+    min-width: 690px;
+    border-collapse: collapse;
+    font-size: 10px;
+}
+
+.cab-table th {
+    padding: 14px 11px;
+    background: #F3F3F3;
+    color: #666666;
+    text-align: left;
+    font-size: 8px;
+    letter-spacing: 0.7px;
+    font-weight: 850;
+}
+
+.cab-table td {
+    padding: 15px 11px;
+    color: #454545;
+    border-bottom: 1px solid #EEEEEE;
+}
+
+.cab-table td strong {
+    color: #000000;
+    font-weight: 850;
+}
+
+
+/* =========================================
+   EMPTY STATES
+   ========================================= */
+
+.cab-empty-state {
+    text-align: center;
+    padding: 45px 18px;
+}
+
+.cab-empty-icon {
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 14px;
+    display: grid;
+    place-items: center;
+    background: #F2F2F2;
+    border-radius: 50%;
+}
+
+.cab-empty-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #000000;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+}
+
+.cab-empty-state h3,
+.cab-empty-state h2 {
+    color: #000000;
+    font-size: 17px;
+    font-weight: 850;
+    margin: 10px 0 8px;
+}
+
+.cab-empty-state p {
+    color: #858585;
+    font-size: 10px;
+    line-height: 1.7;
+    margin: 0 0 19px;
+}
+
+
+/* =========================================
+   NOTIFICATIONS
+   ========================================= */
+
+.cab-notification {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 15px;
+    margin-bottom: 17px;
+    border-radius: 5px;
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+.cab-notification button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 19px;
+}
+
+.notice-success {
+    background: #E7F4EA;
+    color: #256739;
+    border: 1px solid #CBE4D0;
+}
+
+.notice-error {
+    background: #FCEAEA;
+    color: #A52D2D;
+    border: 1px solid #F0CCCC;
+}
+
+.notice-info {
+    background: #EEEEEE;
+    color: #454545;
+    border: 1px solid #DDDDDD;
+}
+
+
+/* =========================================
+   LOADING
+   ========================================= */
+
+.cab-loading {
+    background: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    border-radius: 5px;
+    padding: 12px;
+    text-align: center;
+    color: #252525;
+    font-size: 10px;
+    font-weight: 750;
+    margin-top: 14px;
+}
+
+.cab-spinner {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 2px solid #DDDDDD;
+    border-top-color: #000000;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 8px;
+    animation: cab-spin 0.7s linear infinite;
+}
+
+@keyframes cab-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================
+   FOOTER
+   ========================================= */
+
+.cab-footer {
+    margin-top: 35px;
+    padding: 19px 0 7px;
+    border-top: 1px solid #E5E5E5;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    flex-wrap: wrap;
+    color: #858585;
+    font-size: 8px;
+}
+
+.cab-footer-brand {
+    color: #000000;
+    font-size: 16px;
+    font-weight: 950;
+    letter-spacing: -1px;
+}
+
+.cab-footer span:last-child {
+    margin-left: auto;
+    letter-spacing: 0.9px;
+    font-weight: 800;
+}
+
+
+/* =========================================
+   RESPONSIVE TABLET
+   ========================================= */
+
+@media (max-width: 1100px) {
+
+    .cab-layout {
+        grid-template-columns: 195px minmax(0, 1fr);
+    }
+
+    .cab-main {
+        padding: 23px;
+    }
+
+    .cab-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cab-form-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cab-form-info {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 850px) {
+
+    .cab-hero-decoration {
+        opacity: 0.35;
+    }
+
+    .cab-hero-card {
+        display: none;
+    }
+
+    .cab-booking-info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+/* =========================================
+   RESPONSIVE MOBILE
+   ========================================= */
+
+@media (max-width: 650px) {
+
+    .cab-layout {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cab-sidebar {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 7px;
+        gap: 3px;
+    }
+
+    .cab-sidebar-section,
+    .cab-sidebar-bottom {
+        display: none;
+    }
+
+    .cab-nav-item {
+        width: auto;
+        flex: 1 1 auto;
+        min-height: 42px;
+        justify-content: center;
+        gap: 5px;
+        padding: 8px 6px;
+        font-size: 9px;
+    }
+
+    .cab-nav-item svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .cab-nav-number {
+        min-width: 17px;
+        height: 17px;
+        font-size: 8px;
+    }
+
+    .cab-main {
+        padding: 18px 12px;
+    }
+
+    .cab-topbar {
+        padding: 12px;
+        min-height: 68px;
+    }
+
+    .cab-brand-logo {
+        font-size: 25px;
+    }
+
+    .cab-brand-name strong {
+        font-size: 9px;
+    }
+
+    .cab-brand-name span {
+        font-size: 7px;
+    }
+
+    .cab-user-details strong {
+        max-width: 85px;
+        overflow-wrap: anywhere;
+        font-size: 9px;
+    }
+
+    .cab-user-details span {
+        font-size: 8px;
+    }
+
+    .cab-user-avatar {
+        width: 31px;
+        height: 31px;
+    }
+
+    .cab-hero {
+        min-height: 285px;
+        padding: 26px 20px;
+    }
+
+    .cab-hero h1 {
+        font-size: 35px;
+        letter-spacing: -1.7px;
+    }
+
+    .cab-hero-content {
+        max-width: 100%;
+    }
+
+    .cab-hero-decoration {
+        opacity: 0.15;
+        width: 100%;
+    }
+
+    .cab-hero-index {
+        right: 12px;
+        font-size: 7px;
+    }
+
+    .cab-section-heading {
+        margin: 28px 0 14px;
+    }
+
+    .cab-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .cab-stat-card {
+        padding: 14px;
+    }
+
+    .cab-stat-value {
+        font-size: 29px;
+    }
+
+    .cab-stat-header {
+        font-size: 7px;
+    }
+
+    .cab-stat-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .cab-stat-icon svg {
+        width: 13px;
+        height: 13px;
+    }
+
+    .cab-recent-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 9px;
+    }
+
+    .cab-recent-date {
+        grid-column: 1 / -1;
+    }
+
+    .cab-recent-row &gt; .cab-status {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .cab-quick-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cab-content-panel {
+        padding: 15px;
+    }
+
+    .cab-page-title h1 {
+        font-size: 25px;
+    }
+
+    .cab-page-title-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .cab-field-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .cab-form-info {
+        grid-template-columns: 1fr;
+    }
+
+    .cab-filter-panel {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 13px;
+    }
+
+    .cab-result-count {
+        text-align: right;
+    }
+
+    .cab-booking-info-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cab-booking-header {
+        align-items: flex-start;
+    }
+
+    .cab-booking-actions {
+        flex-direction: column;
+    }
+
+    .cab-booking-actions button {
+        width: 100%;
+    }
+
+    .cab-form-actions {
+        justify-content: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .cab-form-actions button {
+        width: 100%;
+    }
+
+    .cab-footer span:last-child {
+        margin-left: 0;
+    }
+
+}
+
+.cab-small-action {
+    padding: 8px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.cab-review-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: #111;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+.cab-coordinator-details {
+    padding: 22px;
+    background: #f7f7f7;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+}
+
+.cab-coordinator-details .cab-booking-info-grid {
+    margin-top: 18px;
+}
+
+.cab-coordinator-details .cab-agenda-display {
+    margin-top: 18px;
+}
+
+.cab-table td {
+    vertical-align: top;
+}
+
+.cab-coordinator-details {
+    padding: 20px;
+    background: #f7f7f7;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+}
+
+.cab-coordinator-details .cab-booking-info-grid {
+    margin-top: 18px;
+}
+
+.cab-coordinator-details .cab-agenda-display {
+    margin-top: 18px;
+}
+
+.cab-coordinator-details .cab-booking-actions {
+    margin-top: 18px;
+}
+
+.cab-coordinator-details .cab-booking-actions a {
+    display: inline-flex;
+    text-decoration: none;
+}
+
+</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>cab_booking_workspace</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>CAB Booking Workspace</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[
+(function () {
+
+    // ==========================================
+    // 1. APPLICATION CONFIGURATION
+    // ==========================================
+
+    var TABLE = 'x_1459713_cab_bo_0_cab_booking';
+    var CHANGE_TABLE = 'change_request';
+    var GROUP_NAME = 'CAB Coordinators';
+
+    var currentUser = gs.getUser();
+    var currentUserId = gs.getUserID();
+
+    data.isLoggedIn = gs.isLoggedIn();
+    data.userName = gs.getUserDisplayName();
+
+    data.isCoordinator = false;
+    data.changeRequests = [];
+    data.myBookings = [];
+    data.coordinatorBookings = [];
+
+    data.actionResult = null;
+    data.error = '';
+    data.coordinatorNotice = '';
+
+    data.stats = {
+        total: 0,
+        pending: 0,
+        confirmed: 0,
+        cancelled: 0
+    };
+
+    data.approvalsUrl =
+        '/sysapproval_approver_list.do?sysparm_query=approver=' +
+        currentUserId + '^state=requested';
+
+
+    // ==========================================
+    // 2. AUTHENTICATION CHECK
+    // ==========================================
+
+    if (!data.isLoggedIn) {
+        data.error = 'Please sign in to access the CAB Booking Portal.';
+        return;
+    }
+
+
+    // ==========================================
+    // 3. COORDINATOR GROUP CHECK
+    // ==========================================
+
+    data.isCoordinator =
+        currentUser.hasRole('admin') ||
+        currentUser.isMemberOf(GROUP_NAME);
+
+    var groupId = '';
+
+    function getCoordinatorGroup() {
+
+        var group = new GlideRecordSecure('sys_user_group');
+
+        group.addQuery('name', GROUP_NAME);
+        group.addQuery('active', true);
+        group.setLimit(1);
+        group.query();
+
+        if (group.next() && group.canRead()) {
+            return group.getUniqueValue();
+        }
+
+        return '';
+    }
+
+    groupId = getCoordinatorGroup();
+
+    if (data.isCoordinator && !groupId) {
+        data.coordinatorNotice =
+            'Coordinator membership was detected, but the CAB Coordinators group record could not be read.';
+    }
+
+
+    // ==========================================
+    // 4. ACTION HANDLING
+    // ==========================================
+
+    if (input && input.action) {
+
+        if (input.action === 'create') {
+
+            createBooking(input.payload || {});
+
+        } else if (input.action === 'cancel') {
+
+            cancelBooking(input.sys_id);
+
+        } else if (input.action === 'reschedule') {
+
+            requestReschedule(
+                input.sys_id,
+                input.payload || {}
+            );
+
+        } else {
+
+            setResult(false, 'Invalid portal action.');
+
+        }
+    }
+
+
+    // ==========================================
+    // 5. COMMON RESPONSE FUNCTION
+    // ==========================================
+
+    function setResult(success, message) {
+
+        data.actionResult = {
+            ok: success,
+            message: message
+        };
+
+    }
+
+
+    // ==========================================
+    // 6. DATE AND TIME VALIDATION
+    // ==========================================
+
+    function parseLocalDateTime(value) {
+
+        if (!value) {
+            return null;
+        }
+
+        var normalized = String(value).trim();
+
+        normalized = normalized.replace('T', ' ');
+
+        // datetime-local normally supplies minutes only
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(normalized)) {
+            normalized += ':00';
+        }
+
+        var pattern =
+            /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+
+        if (!pattern.test(normalized)) {
+            return null;
+        }
+
+        try {
+
+            var dateTime = new GlideDateTime();
+
+            dateTime.setDisplayValue(
+                normalized,
+                'yyyy-MM-dd HH:mm:ss'
+            );
+
+            return dateTime;
+
+        } catch (error) {
+
+            gs.error(
+                'CAB Portal date parsing error: ' + error
+            );
+
+            return null;
+        }
+    }
+
+
+    // ==========================================
+    // 7. OWNERSHIP AND ACCESS VALIDATION
+    // ==========================================
+
+    function getOwnedBooking(sysId) {
+
+        if (!sysId) {
+            return null;
+        }
+
+        var booking = new GlideRecordSecure(TABLE);
+
+        if (!booking.get(sysId)) {
+            return null;
+        }
+
+        if (!booking.canRead() || !booking.canWrite()) {
+            return null;
+        }
+
+        if (booking.getValue('requested_by') !== currentUserId) {
+            return null;
+        }
+
+        return booking;
+    }
+
+
+    // ==========================================
+    // 8. CREATE CAB BOOKING
+    // ==========================================
+
+    function createBooking(p) {
+
+        if (
+            !p.change_request ||
+            !p.startDateTime ||
+            !p.endDateTime ||
+            !p.agenda
+        ) {
+
+            setResult(
+                false,
+                'Please complete all required fields.'
+            );
+
+            return;
+        }
+
+        // Validate Change Request
+
+        var change = new GlideRecordSecure(CHANGE_TABLE);
+
+        if (
+            !change.get(p.change_request) ||
+            !change.canRead()
+        ) {
+
+            setResult(
+                false,
+                'The selected Change Request is unavailable.'
+            );
+
+            return;
+        }
+
+        // Validate dates
+
+        var start = parseLocalDateTime(p.startDateTime);
+        var end = parseLocalDateTime(p.endDateTime);
+
+        if (!start || !end || start.compareTo(end) >= 0) {
+
+            setResult(
+                false,
+                'End Date/Time must be later than Start Date/Time.'
+            );
+
+            return;
+        }
+
+        var agenda = String(p.agenda).trim();
+        var location = String(p.meeting_location || '').trim();
+
+        if (
+            agenda.length > 4000 ||
+            location.length > 255
+        ) {
+
+            setResult(
+                false,
+                'Agenda or Meeting Location exceeds its allowed length.'
+            );
+
+            return;
+        }
+
+        // Create record
+
+        var booking = new GlideRecordSecure(TABLE);
+
+        if (!booking.canCreate()) {
+
+            setResult(
+                false,
+                'You do not have permission to create CAB bookings.'
+            );
+
+            return;
+        }
+
+        booking.initialize();
+
+        booking.setValue(
+            'change_request',
+            p.change_request
+        );
+
+        booking.setValue(
+            'requested_by',
+            currentUserId
+        );
+
+        booking.setValue(
+            'start_date_time',
+            start.getValue()
+        );
+
+        booking.setValue(
+            'end_date_time',
+            end.getValue()
+        );
+
+        booking.setValue(
+            'agenda',
+            agenda
+        );
+
+        booking.setValue(
+            'meeting_location',
+            location
+        );
+
+        booking.setValue(
+            'status',
+            'requested'
+        );
+
+        // Coordinator will be assigned by Flow Designer
+
+        var newId = booking.insert();
+
+        if (!newId) {
+
+            setResult(
+                false,
+                'Booking creation failed. Check ACL permissions and Business Rules.'
+            );
+
+            return;
+        }
+
+        setResult(
+            true,
+            'CAB booking request submitted successfully.'
+        );
+    }
+
+
+    // ==========================================
+    // 9. CANCEL CAB BOOKING
+    // ==========================================
+
+    function cancelBooking(sysId) {
+
+        var booking = getOwnedBooking(sysId);
+
+        if (!booking) {
+
+            setResult(
+                false,
+                'Booking not found or you do not have permission.'
+            );
+
+            return;
+        }
+
+        if (booking.getValue('status') !== 'confirmed') {
+
+            setResult(
+                false,
+                'Only confirmed bookings can be cancelled.'
+            );
+
+            return;
+        }
+
+        booking.setValue(
+            'status',
+            'cancelled'
+        );
+
+        var updateResult = booking.update();
+
+        if (!updateResult) {
+
+            setResult(
+                false,
+                'Cancellation failed. Check the Business Rule execution.'
+            );
+
+            return;
+        }
+
+        var verify = new GlideRecordSecure(TABLE);
+
+        if (
+            verify.get(sysId) &&
+            verify.getValue('status') === 'cancelled'
+        ) {
+
+            setResult(
+                true,
+                'Booking cancellation submitted successfully.'
+            );
+
+        } else {
+
+            setResult(
+                false,
+                'Unable to verify the cancellation.'
+            );
+
+        }
+    }
+
+
+    // ==========================================
+    // 10. REQUEST RESCHEDULING
+    // ==========================================
+
+    function requestReschedule(sysId, p) {
+
+        var booking = getOwnedBooking(sysId);
+
+        if (!booking) {
+
+            setResult(
+                false,
+                'Booking not found or you do not have permission.'
+            );
+
+            return;
+        }
+
+        if (booking.getValue('status') !== 'confirmed') {
+
+            setResult(
+                false,
+                'Only confirmed bookings can be rescheduled.'
+            );
+
+            return;
+        }
+
+        var start = parseLocalDateTime(p.startDateTime);
+        var end = parseLocalDateTime(p.endDateTime);
+
+        if (!start || !end || start.compareTo(end) >= 0) {
+
+            setResult(
+                false,
+                'Proposed End Date/Time must be later than Proposed Start Date/Time.'
+            );
+
+            return;
+        }
+
+        // Preserve the original meeting dates.
+        // Only update the proposed dates.
+
+        booking.setValue(
+            'proposed_start_date_time',
+            start.getValue()
+        );
+
+        booking.setValue(
+            'proposed_end_date_time',
+            end.getValue()
+        );
+
+        booking.setValue(
+            'status',
+            'reschedule_requested'
+        );
+
+        var updateResult = booking.update();
+
+        if (!updateResult) {
+
+            setResult(
+                false,
+                'Rescheduling request failed. Check availability validation.'
+            );
+
+            return;
+        }
+
+        // Verify the saved record
+
+        var verify = new GlideRecordSecure(TABLE);
+
+        if (
+            verify.get(sysId) &&
+            verify.getValue('status') === 'reschedule_requested' &&
+            verify.getValue('proposed_start_date_time') === start.getValue() &&
+            verify.getValue('proposed_end_date_time') === end.getValue()
+        ) {
+
+            setResult(
+                true,
+                'Rescheduling request submitted for coordinator approval.'
+            );
+
+        } else {
+
+            setResult(
+                false,
+                'Unable to verify the rescheduling request.'
+            );
+
+        }
+    }
+
+
+    // ==========================================
+    // 11. LOAD CHANGE REQUESTS
+    // ==========================================
+
+    function loadChangeRequests() {
+
+        var changes = new GlideRecordSecure(CHANGE_TABLE);
+
+        changes.orderByDesc('sys_created_on');
+        changes.setLimit(100);
+        changes.query();
+
+        while (changes.next()) {
+
+            if (!changes.canRead()) {
+                continue;
+            }
+
+            data.changeRequests.push({
+
+                sys_id: changes.getUniqueValue(),
+
+                label:
+                    changes.getDisplayValue('number') +
+                    ' - ' +
+                    changes.getValue('short_description')
+
+            });
+
+        }
+    }
+
+
+    // ==========================================
+    // 12. FORMAT BOOKING RECORD
+    // ==========================================
+
+    function formatBooking(gr) {
+
+        return {
+
+            sys_id: gr.getUniqueValue(),
+
+            number:
+                gr.getDisplayValue('number'),
+
+            changeRequest:
+                gr.getDisplayValue('change_request'),
+
+            requestedBy:
+                gr.getDisplayValue('requested_by'),
+
+            start:
+                gr.getDisplayValue('start_date_time'),
+
+            end:
+                gr.getDisplayValue('end_date_time'),
+
+            proposedStart:
+                gr.getDisplayValue('proposed_start_date_time'),
+
+            proposedEnd:
+                gr.getDisplayValue('proposed_end_date_time'),
+
+            agenda:
+                gr.getValue('agenda'),
+
+            location:
+                gr.getValue('meeting_location'),
+
+            status:
+                gr.getDisplayValue('status'),
+
+            statusValue:
+                gr.getValue('status')
+
+        };
+    }
+
+
+    // ==========================================
+    // 13. LOAD MY BOOKINGS
+    // ==========================================
+
+    function loadMyBookings() {
+
+        var bookings = new GlideRecordSecure(TABLE);
+
+        bookings.addQuery(
+            'requested_by',
+            currentUserId
+        );
+
+        bookings.orderByDesc('sys_created_on');
+        bookings.setLimit(100);
+        bookings.query();
+
+        while (bookings.next()) {
+
+            if (!bookings.canRead()) {
+                continue;
+            }
+
+            var item = formatBooking(bookings);
+
+            data.myBookings.push(item);
+
+            data.stats.total++;
+
+            if (
+                item.statusValue === 'requested' ||
+                item.statusValue === 'pending_approval'
+            ) {
+
+                data.stats.pending++;
+
+            } else if (item.statusValue === 'confirmed') {
+
+                data.stats.confirmed++;
+
+            } else if (item.statusValue === 'cancelled') {
+
+                data.stats.cancelled++;
+
+            }
+
+        }
+    }
+
+
+    // ==========================================
+    // 14. LOAD COORDINATOR BOOKINGS
+    // ==========================================
+
+    function loadCoordinatorBookings() {
+
+        if (!data.isCoordinator || !groupId) {
+            return;
+        }
+
+        var bookings = new GlideRecordSecure(TABLE);
+
+        // Coordinator field must reference sys_user_group
+
+        bookings.addQuery(
+            'coordinator',
+            groupId
+        );
+
+        bookings.addQuery(
+            'status',
+            'IN',
+            'pending_approval,reschedule_requested,confirmed'
+        );
+
+        bookings.orderBy('start_date_time');
+        bookings.setLimit(100);
+        bookings.query();
+
+        while (bookings.next()) {
+
+            if (!bookings.canRead()) {
+                continue;
+            }
+
+            data.coordinatorBookings.push(
+                formatBooking(bookings)
+            );
+
+        }
+    }
+
+
+    // ==========================================
+    // 15. LOAD INITIAL AND UPDATED DATA
+    // ==========================================
+
+    try {
+
+        loadChangeRequests();
+        loadMyBookings();
+
+        if (data.isCoordinator) {
+            loadCoordinatorBookings();
+        }
+
+    } catch (error) {
+
+        gs.error(
+            'CAB Booking Workspace Server Script Error: ' +
+            error
+        );
+
+        data.error =
+            'Unable to load CAB Booking data. Check the table permissions and system logs.';
+
+    }
+
+})();
+]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:24:12</sys_created_on>
+        <sys_id>46846fe5c328d3107faa33bc05013157</sys_id>
+        <sys_mod_count>9</sys_mod_count>
+        <sys_name>CAB Booking Workspace</sys_name>
+        <sys_package display_value="CAB Booking Automation" source="x_1459713_cab_bo_0">c317a565c3a893107faa33bc05013129</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_update_name>sp_widget_46846fe5c328d3107faa33bc05013157</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 15:20:34</sys_updated_on>
+        <template><![CDATA[
+<div class="cab-app">
+
+    <!-- TOP NAVIGATION -->
+    <header class="cab-topbar">
+
+        <div class="cab-brand">
+            <div class="cab-brand-logo">CAB.</div>
+            <div class="cab-brand-divider"></div>
+            <div class="cab-brand-name">
+                <strong>BOOKING</strong>
+                <span>ENTERPRISE WORKSPACE</span>
+            </div>
+        </div>
+
+        <div class="cab-topbar-right">
+
+            <button class="cab-icon-button"
+                    ng-click="c.refreshData()"
+                    ng-disabled="c.busy"
+                    title="Refresh dashboard"
+                    aria-label="Refresh dashboard">
+
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 7v5h-5M4 17v-5h5"
+                          fill="none" stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                    <path d="M5.5 9a7 7 0 0 1 12-2L20 12M4 12l2.5 5a7 7 0 0 0 12-2"
+                          fill="none" stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                </svg>
+
+            </button>
+
+            <div class="cab-user-avatar">
+                {{c.data.userName.charAt(0).toUpperCase()}}
+            </div>
+
+            <div class="cab-user-details">
+                <strong>{{c.data.userName}}</strong>
+                <span>Account</span>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <div class="cab-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="cab-sidebar">
+
+            <div class="cab-sidebar-section">
+                MAIN MENU
+            </div>
+
+            <button class="cab-nav-item"
+                    ng-class="{'active':c.view==='dashboard'}"
+                    ng-click="c.setView('dashboard')">
+
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="8" height="8" rx="1.5"/>
+                    <rect x="13" y="3" width="8" height="5" rx="1.5"/>
+                    <rect x="13" y="10" width="8" height="11" rx="1.5"/>
+                    <rect x="3" y="13" width="8" height="8" rx="1.5"/>
+                </svg>
+
+                <span>Overview</span>
+
+            </button>
+
+
+            <button class="cab-nav-item"
+                    ng-class="{'active':c.view==='new'}"
+                    ng-click="c.setView('new')">
+
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 8v8M8 12h8"/>
+                </svg>
+
+                <span>New booking</span>
+
+            </button>
+
+
+            <button class="cab-nav-item"
+                    ng-class="{'active':c.view==='my'}"
+                    ng-click="c.setView('my')">
+
+                <svg viewBox="0 0 24 24">
+                    <rect x="4" y="3" width="16" height="18" rx="2"/>
+                    <path d="M8 8h8M8 12h8M8 16h5"/>
+                </svg>
+
+                <span>My bookings</span>
+
+                <span class="cab-nav-number">
+                    {{c.data.stats.total}}
+                </span>
+
+            </button>
+
+
+            <div ng-if="c.data.isCoordinator">
+
+                <div class="cab-sidebar-section cab-sidebar-spaced">
+                    MANAGEMENT
+                </div>
+
+                <button class="cab-nav-item"
+                        ng-class="{'active':c.view==='coordinator'}"
+                        ng-click="c.setView('coordinator')">
+
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="9" cy="8" r="3.5"/>
+                        <path d="M2.5 20v-1.5A5 5 0 0 1 7.5 13h3a5 5 0 0 1 5 5V20"/>
+                        <path d="M16 5a3.5 3.5 0 0 1 0 6.5M18 14a5 5 0 0 1 3.5 4.5V20"/>
+                    </svg>
+
+                    <span>Coordinator</span>
+
+                </button>
+
+            </div>
+
+
+            <div class="cab-sidebar-bottom">
+
+                <div class="cab-sidebar-divider"></div>
+
+                <div class="cab-sidebar-product">
+                    CAB BOOKING AUTOMATION
+                </div>
+
+                <div class="cab-sidebar-caption">
+                    Change Advisory Board
+                </div>
+
+                <div class="cab-sidebar-version">
+                    ENTERPRISE ITSM
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN AREA -->
+        <main class="cab-main">
+
+
+            <!-- NOTIFICATION -->
+            <div ng-if="c.notice"
+                 class="cab-notification"
+                 ng-class="'notice-' + c.noticeType"
+                 role="alert">
+
+                <span>{{c.notice}}</span>
+
+                <button type="button"
+                        ng-click="c.notice=''">
+                    ×
+                </button>
+
+            </div>
+
+
+            <div ng-if="c.data.error"
+                 class="cab-notification notice-error">
+
+                {{c.data.error}}
+
+            </div>
+
+
+            <!-- =================================
+                 DASHBOARD
+                 ================================= -->
+            <section ng-if="c.view==='dashboard'">
+
+
+                <!-- HERO -->
+                <div class="cab-hero">
+
+                    <div class="cab-hero-content">
+
+                        <div class="cab-hero-label">
+                            CHANGE ADVISORY BOARD
+                        </div>
+
+                        <h1>
+                            Your meetings,<br/>
+                            under control.
+                        </h1>
+
+                        <p>
+                            Schedule and manage Change Advisory Board
+                            meetings from one centralized workspace.
+                        </p>
+
+                        <button class="cab-hero-button"
+                                ng-click="c.setView('new')">
+
+                            <span>Request a CAB slot</span>
+
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 12h14M13 5l7 7-7 7"/>
+                            </svg>
+
+                        </button>
+
+                    </div>
+
+                    <div class="cab-hero-decoration">
+
+                        <div class="cab-hero-circle"></div>
+
+                        <div class="cab-hero-card">
+                            <span>MEETING MANAGEMENT</span>
+                            <strong>ONE WORKSPACE.</strong>
+                            <strong>FULL VISIBILITY.</strong>
+                        </div>
+
+                    </div>
+
+                    <div class="cab-hero-index">
+                        01 / CAB WORKSPACE
+                    </div>
+
+                </div>
+
+
+                <!-- STATISTICS -->
+                <div class="cab-section-heading">
+
+                    <div>
+                        <div class="cab-overline">YOUR ACTIVITY</div>
+                        <h2>Booking overview</h2>
+                    </div>
+
+                    <span class="cab-live-label">
+                        <span></span>
+                        LIVE RECORDS
+                    </span>
+
+                </div>
+
+
+                <div class="cab-stats-grid">
+
+                    <div class="cab-stat-card">
+
+                        <div class="cab-stat-header">
+                            <span>TOTAL BOOKINGS</span>
+
+                            <div class="cab-stat-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="4" y="3" width="16" height="18" rx="2"/>
+                                    <path d="M8 8h8M8 12h8M8 16h5"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="cab-stat-value">
+                            {{c.data.stats.total}}
+                        </div>
+
+                        <div class="cab-stat-footer">
+                            All submitted requests
+                        </div>
+
+                    </div>
+
+
+                    <div class="cab-stat-card">
+
+                        <div class="cab-stat-header">
+                            <span>PENDING</span>
+
+                            <div class="cab-stat-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <path d="M12 7v5l3 2"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="cab-stat-value">
+                            {{c.data.stats.pending}}
+                        </div>
+
+                        <div class="cab-stat-footer">
+                            Awaiting a decision
+                        </div>
+
+                    </div>
+
+
+                    <div class="cab-stat-card">
+
+                        <div class="cab-stat-header">
+                            <span>CONFIRMED</span>
+
+                            <div class="cab-stat-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <path d="m8 12 3 3 5-6"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="cab-stat-value">
+                            {{c.data.stats.confirmed}}
+                        </div>
+
+                        <div class="cab-stat-footer">
+                            Scheduled meetings
+                        </div>
+
+                    </div>
+
+
+                    <div class="cab-stat-card">
+
+                        <div class="cab-stat-header">
+                            <span>CANCELLED</span>
+
+                            <div class="cab-stat-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <path d="m9 9 6 6m0-6-6 6"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="cab-stat-value">
+                            {{c.data.stats.cancelled}}
+                        </div>
+
+                        <div class="cab-stat-footer">
+                            Cancelled requests
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RECENT BOOKINGS -->
+                <div class="cab-content-panel">
+
+                    <div class="cab-panel-heading">
+
+                        <div>
+                            <div class="cab-overline">
+                                YOUR SCHEDULE
+                            </div>
+
+                            <h2>Recent bookings</h2>
+
+                            <p>
+                                Your latest CAB meeting requests.
+                            </p>
+
+                        </div>
+
+                        <button class="cab-view-all"
+                                ng-click="c.setView('my')">
+
+                            View all
+
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 12h14m-6-6 6 6-6 6"/>
+                            </svg>
+
+                        </button>
+
+                    </div>
+
+
+                    <div ng-if="!c.data.myBookings.length"
+                         class="cab-empty-state">
+
+                        <div class="cab-empty-icon">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M12 8v8M8 12h8"/>
+                            </svg>
+                        </div>
+
+                        <h3>Nothing scheduled yet</h3>
+
+                        <p>
+                            Your CAB booking requests will appear here.
+                        </p>
+
+                        <button class="cab-black-button"
+                                ng-click="c.setView('new')">
+
+                            Create your first booking
+
+                        </button>
+
+                    </div>
+
+
+                    <div class="cab-recent-list">
+
+                        <div class="cab-recent-row"
+                             ng-repeat="b in c.data.myBookings | limitTo:5 track by b.sys_id">
+
+                            <div class="cab-recent-reference">
+
+                                <div class="cab-recent-file">
+                                    <svg viewBox="0 0 24 24">
+                                        <rect x="4" y="3" width="16" height="18" rx="2"/>
+                                        <path d="M8 8h8M8 12h8M8 16h5"/>
+                                    </svg>
+                                </div>
+
+                                <div>
+                                    <strong>{{b.number}}</strong>
+                                    <span>{{b.changeRequest}}</span>
+                                </div>
+
+                            </div>
+
+                            <div class="cab-recent-date">
+                                <span>MEETING DATE</span>
+                                <strong>{{b.start}}</strong>
+                            </div>
+
+                            <span class="cab-status"
+                                  ng-class="'status-' + c.statusClass(b.statusValue)">
+
+                                {{b.status}}
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- QUICK ACCESS -->
+                <div class="cab-quick-grid">
+
+                    <button class="cab-quick-card"
+                            ng-click="c.setView('new')">
+
+                        <div class="cab-quick-icon">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M12 8v8M8 12h8"/>
+                            </svg>
+                        </div>
+
+                        <strong>Book a CAB slot</strong>
+
+                        <span>
+                            Submit a new change review request.
+                        </span>
+
+                        <em>Get started →</em>
+
+                    </button>
+
+
+                    <button class="cab-quick-card"
+                            ng-click="c.setView('my')">
+
+                        <div class="cab-quick-icon">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="4" y="3" width="16" height="18" rx="2"/>
+                                <path d="M8 8h8M8 12h8M8 16h5"/>
+                            </svg>
+                        </div>
+
+                        <strong>Track your bookings</strong>
+
+                        <span>
+                            Follow booking progress and manage schedules.
+                        </span>
+
+                        <em>View bookings →</em>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================
+                 NEW BOOKING
+                 ================================= -->
+            <section ng-if="c.view==='new'">
+
+
+                <div class="cab-page-title">
+
+                    <div class="cab-overline">
+                        REQUEST MANAGEMENT / NEW REQUEST
+                    </div>
+
+                    <h1>Book a CAB slot.</h1>
+
+                    <p>
+                        Provide the change information and preferred
+                        meeting schedule.
+                    </p>
+
+                </div>
+
+
+                <div class="cab-form-layout">
+
+                    <div class="cab-content-panel cab-form-panel">
+
+                        <form ng-submit="c.submitBooking()">
+
+
+                            <div class="cab-form-heading">
+                                <span>01</span>
+
+                                <div>
+                                    <h2>Change information</h2>
+                                    <p>Identify the change requiring CAB assessment.</p>
+                                </div>
+                            </div>
+
+
+                            <div class="cab-field">
+
+                                <label for="cab-change">
+                                    CHANGE REQUEST <b>*</b>
+                                </label>
+
+                                <select id="cab-change"
+                                        ng-model="c.form.change_request"
+                                        ng-options="item.sys_id as item.label for item in c.data.changeRequests"
+                                        required>
+
+                                    <option value="">
+                                        Select a Change Request
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="cab-field">
+
+                                <label>REQUESTED BY</label>
+
+                                <input type="text"
+                                       ng-value="c.data.userName"
+                                       disabled/>
+
+                                <small>
+                                    Your logged-in account is populated automatically.
+                                </small>
+
+                            </div>
+
+
+                            <div class="cab-form-divider"></div>
+
+
+                            <div class="cab-form-heading">
+                                <span>02</span>
+
+                                <div>
+                                    <h2>Meeting schedule</h2>
+                                    <p>Choose your preferred CAB meeting time.</p>
+                                </div>
+                            </div>
+
+
+                            <div class="cab-field-grid">
+
+                                <div class="cab-field">
+
+                                    <label for="cab-start">
+                                        START DATE & TIME <b>*</b>
+                                    </label>
+
+                                    <input id="cab-start"
+                                           type="datetime-local"
+                                           ng-model="c.form.startDateTime"
+                                           required/>
+
+                                </div>
+
+
+                                <div class="cab-field">
+
+                                    <label for="cab-end">
+                                        END DATE & TIME <b>*</b>
+                                    </label>
+
+                                    <input id="cab-end"
+                                           type="datetime-local"
+                                           ng-model="c.form.endDateTime"
+                                           required/>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="cab-field">
+
+                                <label for="cab-agenda">
+                                    MEETING AGENDA <b>*</b>
+                                </label>
+
+                                <textarea id="cab-agenda"
+                                          ng-model="c.form.agenda"
+                                          maxlength="4000"
+                                          rows="5"
+                                          placeholder="Describe the change, its purpose and topics for CAB discussion..."
+                                          required></textarea>
+
+                                <small>
+                                    Maximum 4000 characters.
+                                </small>
+
+                            </div>
+
+
+                            <div class="cab-field">
+
+                                <label for="cab-location">
+                                    MEETING LOCATION
+                                </label>
+
+                                <input id="cab-location"
+                                       type="text"
+                                       ng-model="c.form.meeting_location"
+                                       maxlength="255"
+                                       placeholder="Meeting room or online conference link"/>
+
+                            </div>
+
+
+                            <div class="cab-form-actions">
+
+                                <button type="button"
+                                        class="cab-outline-button"
+                                        ng-click="c.setView('dashboard')">
+
+                                    Cancel
+
+                                </button>
+
+                                <button type="submit"
+                                        class="cab-black-button"
+                                        ng-disabled="c.busy">
+
+                                    {{c.busy ? 'Submitting...' : 'Submit booking request'}}
+
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M5 12h14m-6-6 6 6-6 6"/>
+                                    </svg>
+
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+
+                    <!-- FORM SIDEBAR -->
+                    <aside class="cab-form-info">
+
+                        <div class="cab-info-black">
+
+                            <div class="cab-overline-light">
+                                BOOKING PROCESS
+                            </div>
+
+                            <h3>What happens next?</h3>
+
+                            <div class="cab-process-item">
+                                <span>01</span>
+                                <div>
+                                    <strong>Submit request</strong>
+                                    <p>Provide your change details and preferred slot.</p>
+                                </div>
+                            </div>
+
+                            <div class="cab-process-item">
+                                <span>02</span>
+                                <div>
+                                    <strong>Availability check</strong>
+                                    <p>ServiceNow checks conflicting bookings.</p>
+                                </div>
+                            </div>
+
+                            <div class="cab-process-item">
+                                <span>03</span>
+                                <div>
+                                    <strong>Coordinator review</strong>
+                                    <p>The CAB team reviews the request.</p>
+                                </div>
+                            </div>
+
+                            <div class="cab-process-item">
+                                <span>04</span>
+                                <div>
+                                    <strong>Booking confirmation</strong>
+                                    <p>You receive the final booking status.</p>
+                                </div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="cab-info-note">
+                            <strong>Important</strong>
+                            <p>
+                                A CAB booking reserves meeting time.
+                                It does not independently authorize
+                                implementation of the Change Request.
+                            </p>
+                        </div>
+
+                    </aside>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================
+                 MY BOOKINGS
+                 ================================= -->
+            <section ng-if="c.view==='my'">
+
+
+                <div class="cab-page-title">
+
+                    <div class="cab-overline">
+                        REQUEST MANAGEMENT
+                    </div>
+
+                    <div class="cab-page-title-row">
+
+                        <div>
+                            <h1>Your bookings.</h1>
+                            <p>
+                                Review your CAB meeting requests and schedules.
+                            </p>
+                        </div>
+
+                        <button class="cab-black-button"
+                                ng-click="c.setView('new')">
+
+                            + New booking
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SEARCH / FILTER -->
+                <div class="cab-filter-panel"
+                     ng-if="c.data.myBookings.length">
+
+                    <div class="cab-search-box">
+
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="7"/>
+                            <path d="m16 16 5 5"/>
+                        </svg>
+
+                        <input type="search"
+                               aria-label="Search bookings"
+                               ng-model="c.bookingSearch"
+                               placeholder="Search booking, change request or agenda..."/>
+
+                    </div>
+
+
+                    <div class="cab-status-filter">
+
+                        <label for="cab-status-filter">
+                            STATUS
+                        </label>
+
+                        <select id="cab-status-filter"
+                                ng-model="c.bookingStatus">
+
+                            <option value="all">All statuses</option>
+                            <option value="requested">Requested</option>
+                            <option value="pending_approval">Pending Approval</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="reschedule_requested">Reschedule Requested</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="completed">Completed</option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="cab-result-count">
+                        {{c.countFilteredBookings()}} RESULTS
+                    </div>
+
+                </div>
+
+
+                <!-- NO BOOKINGS -->
+                <div class="cab-content-panel cab-empty-state"
+                     ng-if="!c.data.myBookings.length">
+
+                    <h2>No bookings yet.</h2>
+
+                    <p>
+                        Your CAB meeting requests will appear here.
+                    </p>
+
+                    <button class="cab-black-button"
+                            ng-click="c.setView('new')">
+                        Create first booking
+                    </button>
+
+                </div>
+
+
+                <!-- NO SEARCH RESULTS -->
+                <div class="cab-content-panel cab-empty-state"
+                     ng-if="c.data.myBookings.length &&
+                     c.countFilteredBookings()===0">
+
+                    <h2>No matching bookings.</h2>
+
+                    <p>Try a different search or filter.</p>
+
+                    <button class="cab-outline-button"
+                            ng-click="c.bookingSearch=''; c.bookingStatus='all'">
+                        Clear filters
+                    </button>
+
+                </div>
+
+
+                <!-- BOOKING LIST -->
+                <div class="cab-booking-list">
+
+                    <div class="cab-content-panel cab-booking-card"
+                         ng-repeat="b in c.data.myBookings | filter:c.filterBooking track by b.sys_id">
+
+
+                        <div class="cab-booking-header">
+
+                            <div>
+                                <div class="cab-overline">
+                                    BOOKING REFERENCE
+                                </div>
+
+                                <h2>{{b.number}}</h2>
+
+                                <span class="cab-change-number">
+                                    {{b.changeRequest}}
+                                </span>
+                            </div>
+
+
+                            <span class="cab-status"
+                                  ng-class="'status-' + c.statusClass(b.statusValue)">
+
+                                {{b.status}}
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="cab-booking-info-grid">
+
+                            <div>
+                                <span>START DATE & TIME</span>
+                                <strong>{{b.start}}</strong>
+                            </div>
+
+                            <div>
+                                <span>END DATE & TIME</span>
+                                <strong>{{b.end}}</strong>
+                            </div>
+
+                            <div>
+                                <span>MEETING LOCATION</span>
+                                <strong>{{b.location || 'Not specified'}}</strong>
+                            </div>
+
+                        </div>
+
+
+                        <div class="cab-agenda-display">
+
+                            <span>MEETING AGENDA</span>
+
+                            <p>{{b.agenda}}</p>
+
+                        </div>
+
+
+                        <!-- RESCHEDULE DETAILS -->
+                        <div class="cab-proposed-box"
+                             ng-if="b.statusValue==='reschedule_requested'">
+
+                            <strong>PROPOSED NEW SCHEDULE</strong>
+
+                            <p>Start: {{b.proposedStart}}</p>
+
+                            <p>End: {{b.proposedEnd}}</p>
+
+                            <small>Waiting for coordinator approval.</small>
+
+                        </div>
+
+
+                        <!-- BOOKING ACTIONS -->
+                        <div class="cab-booking-actions"
+                             ng-if="b.statusValue==='confirmed'">
+
+                            <button class="cab-outline-button"
+                                    ng-click="c.openReschedule(b)">
+
+                                Request rescheduling
+
+                            </button>
+
+                            <button class="cab-cancel-button"
+                                    ng-click="c.cancelBooking(b)"
+                                    ng-disabled="c.busy">
+
+                                Cancel booking
+
+                            </button>
+
+                        </div>
+
+
+                        <!-- RESCHEDULE FORM -->
+                        <div class="cab-reschedule-form"
+                             ng-if="c.rescheduleTarget &&
+                             c.rescheduleTarget.sys_id===b.sys_id">
+
+                            <h3>Proposed new schedule</h3>
+
+                            <p>
+                                Your current confirmed meeting time
+                                will remain unchanged until approval.
+                            </p>
+
+                            <form ng-submit="c.submitReschedule()">
+
+                                <div class="cab-field-grid">
+
+                                    <div class="cab-field">
+
+                                        <label>PROPOSED START DATE & TIME</label>
+
+                                        <input type="datetime-local"
+                                               ng-model="c.rescheduleForm.startDateTime"
+                                               required/>
+
+                                    </div>
+
+                                    <div class="cab-field">
+
+                                        <label>PROPOSED END DATE & TIME</label>
+
+                                        <input type="datetime-local"
+                                               ng-model="c.rescheduleForm.endDateTime"
+                                               required/>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="cab-form-actions">
+
+                                    <button type="button"
+                                            class="cab-outline-button"
+                                            ng-click="c.closeReschedule()">
+                                        Close
+                                    </button>
+
+                                    <button type="submit"
+                                            class="cab-black-button"
+                                            ng-disabled="c.busy">
+                                        Submit reschedule request
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+           
+<!-- =================================
+     COORDINATOR DASHBOARD
+     ================================= -->
+<section ng-if="c.view==='coordinator' && c.data.isCoordinator">
+
+    <div class="cab-page-title">
+
+        <div class="cab-overline">
+            MANAGEMENT WORKSPACE
+        </div>
+
+        <div class="cab-page-title-row">
+
+            <div>
+                <h1>Coordinator overview.</h1>
+                <p>
+                    Monitor CAB bookings assigned to your team.
+                </p>
+            </div>
+
+            <a class="cab-black-button"
+               ng-href="{{c.data.approvalsUrl}}"
+               target="_blank"
+               rel="noopener noreferrer">
+
+                Open approvals
+
+                <svg viewBox="0 0 24 24">
+                    <path d="M7 17 17 7M7 7h10v10"/>
+                </svg>
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="cab-content-panel">
+
+        <div class="cab-panel-heading">
+
+            <div>
+                <div class="cab-overline">TEAM SCHEDULE</div>
+                <h2>Assigned bookings</h2>
+                <p>
+                    Review assigned meetings and booking details.
+                </p>
+            </div>
+
+        </div>
+
+        <div ng-if="!c.data.coordinatorBookings.length"
+             class="cab-empty-state">
+
+            <h3>No assigned bookings.</h3>
+
+            <p>
+                There are no visible bookings assigned to your group.
+            </p>
+
+        </div>
+
+        <div class="cab-table-container"
+             ng-if="c.data.coordinatorBookings.length">
+
+            <table class="cab-table">
+
+                <thead>
+                    <tr>
+                        <th>BOOKING</th>
+                        <th>CHANGE REQUEST</th>
+                        <th>REQUESTER</th>
+                        <th>START</th>
+                        <th>END</th>
+                        <th>STATUS</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr ng-repeat="b in c.data.coordinatorBookings track by b.sys_id">
+
+                        <td><strong>{{b.number}}</strong></td>
+
+                        <td>{{b.changeRequest}}</td>
+
+                        <td>{{b.requestedBy}}</td>
+
+                        <td>{{b.start}}</td>
+
+                        <td>{{b.end}}</td>
+
+                        <td>
+                            <span class="cab-status"
+                                  ng-class="'status-' + c.statusClass(b.statusValue)">
+                                {{b.status}}
+                            </span>
+                        </td>
+
+                        <td>
+                            <button type="button"
+                                    class="cab-outline-button"
+                                    ng-click="b.showDetails = !b.showDetails">
+
+                                {{b.showDetails ? 'Hide details' : 'View details'}}
+
+                            </button>
+                        </td>
+
+                    </tr>
+
+                    <!-- EXPANDED DETAILS -->
+
+                    <tr ng-repeat="b in c.data.coordinatorBookings track by b.sys_id"
+                        ng-if="b.showDetails">
+
+                        <td colspan="7">
+
+                            <div class="cab-coordinator-details">
+
+                                <div class="cab-overline">
+                                    BOOKING DETAILS
+                                </div>
+
+                                <div class="cab-booking-info-grid">
+
+                                    <div>
+                                        <span>BOOKING NUMBER</span>
+                                        <strong>{{b.number}}</strong>
+                                    </div>
+
+                                    <div>
+                                        <span>REQUESTER</span>
+                                        <strong>{{b.requestedBy}}</strong>
+                                    </div>
+
+                                    <div>
+                                        <span>START DATE & TIME</span>
+                                        <strong>{{b.start}}</strong>
+                                    </div>
+
+                                    <div>
+                                        <span>END DATE & TIME</span>
+                                        <strong>{{b.end}}</strong>
+                                    </div>
+
+                                    <div>
+                                        <span>MEETING LOCATION</span>
+                                        <strong>{{b.location || 'Not specified'}}</strong>
+                                    </div>
+
+                                    <div>
+                                        <span>STATUS</span>
+                                        <strong>{{b.status}}</strong>
+                                    </div>
+
+                                </div>
+
+                                <div class="cab-agenda-display">
+
+                                    <span>MEETING AGENDA</span>
+
+                                    <p>{{b.agenda || 'No agenda available.'}}</p>
+
+                                </div>
+
+                                <div class="cab-proposed-box"
+                                     ng-if="b.statusValue==='reschedule_requested'">
+
+                                    <strong>PROPOSED NEW SCHEDULE</strong>
+
+                                    <p>Start: {{b.proposedStart}}</p>
+
+                                    <p>End: {{b.proposedEnd}}</p>
+
+                                </div>
+
+                                <div class="cab-booking-actions"
+                                     ng-if="b.statusValue==='pending_approval' ||
+                                            b.statusValue==='reschedule_requested'">
+
+                                    <a class="cab-black-button"
+                                       ng-href="{{c.data.approvalsUrl}}"
+                                       target="_blank"
+                                       rel="noopener noreferrer">
+
+                                        Review approval
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+
+            <!-- LOADING -->
+            <div ng-if="c.busy" class="cab-loading">
+                <span class="cab-spinner"></span>
+                Processing request...
+            </div>
+
+
+            <!-- FOOTER -->
+            <footer class="cab-footer">
+
+                <div class="cab-footer-brand">
+                    CAB.
+                </div>
+
+                <span>
+                    CAB Booking Automation
+                </span>
+
+                <span>
+                    ENTERPRISE IT SERVICE MANAGEMENT
+                </span>
+
+            </footer>
+
+
+        </main>
+
+    </div>
+
+</div>
+]]></template>
+    </sp_widget>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>46846fe5c328d3107faa33bc05013157</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:24:12</sys_created_on>
+        <sys_id>5a846329c328d3107faa33bc0501310f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:24:12</sys_updated_on>
+        <table>sp_widget</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>

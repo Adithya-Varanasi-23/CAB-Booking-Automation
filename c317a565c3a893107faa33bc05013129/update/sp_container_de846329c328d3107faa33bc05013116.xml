@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_container">
+    <sp_container action="INSERT_OR_UPDATE">
+        <aria_label/>
+        <background_color/>
+        <background_image/>
+        <background_style>default</background_style>
+        <bootstrap_alt>false</bootstrap_alt>
+        <class_name/>
+        <container_class_name/>
+        <name>CAB Booking Workspace - Test Page - Container 1</name>
+        <order>1</order>
+        <semantic_tag/>
+        <sp_page display_value="cab_booking_workspace">9a846329c328d3107faa33bc05013110</sp_page>
+        <subheader>false</subheader>
+        <sys_class_name>sp_container</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-14 14:24:12</sys_created_on>
+        <sys_id>de846329c328d3107faa33bc05013116</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>CAB Booking Workspace - Test Page - Container 1</sys_name>
+        <sys_package display_value="CAB Booking Automation" source="x_1459713_cab_bo_0">c317a565c3a893107faa33bc05013129</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CAB Booking Automation">c317a565c3a893107faa33bc05013129</sys_scope>
+        <sys_update_name>sp_container_de846329c328d3107faa33bc05013116</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-14 14:24:12</sys_updated_on>
+        <title/>
+        <width>container</width>
+    </sp_container>
+</record_update>
